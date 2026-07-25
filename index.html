@@ -1368,6 +1368,8 @@ function openTrip(id) {
   if (!trip) return;
   currentTripId = id;
   currentTripDraft = cloneTrip(trip);
+  collapsedStops.clear();
+  currentTripDraft.stops.forEach(s => collapsedStops.add(s.id));
   dashboardView.hidden = true;
   tripDetailView.hidden = false;
   bottomNav.hidden = false;
