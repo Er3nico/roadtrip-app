@@ -1722,9 +1722,24 @@ function getCurrentPosition() {
   });
 }
 
+const FETCH_TIMEOUT_MS = 8000;
+
+async function fetchWithTimeout(url, options) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...(options || {}), signal: controller.signal });
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw new Error('timeout');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function geocodeAddress(address) {
   const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(address);
-  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  const res = await fetchWithTimeout(url, { headers: { 'Accept': 'application/json' } });
   if (!res.ok) throw new Error('geocode-failed');
   const data = await res.json();
   if (!data.length) throw new Error('address-not-found');
@@ -1789,7 +1804,7 @@ function debounce(key, fn, delay) {
 // ---------- automatic distance/duration between stops ----------
 async function fetchDrivingRoute(from, to) {
   const url = 'https://router.project-osrm.org/route/v1/driving/' + from.lon + ',' + from.lat + ';' + to.lon + ',' + to.lat + '?overview=false';
-  const res = await fetch(url);
+  const res = await fetchWithTimeout(url);
   if (!res.ok) throw new Error('route-failed');
   const data = await res.json();
   if (!data.routes || !data.routes.length) throw new Error('no-route');
@@ -1801,6 +1816,11 @@ async function autoCalcSegment(trip, idx, container) {
   const prev = trip.stops[idx - 1];
   const curr = trip.stops[idx];
   if (!prev.address || !prev.address.trim() || !curr.address || !curr.address.trim()) return;
+  const card = container.querySelector('[data-stop-id="' + curr.id + '"]');
+  const kmInput = card && card.querySelector('[data-field="km"]');
+  const durationInput = card && card.querySelector('[data-field="duration"]');
+  if (kmInput) { kmInput.disabled = true; kmInput.placeholder = 'Berechne...'; }
+  if (durationInput) { durationInput.disabled = true; durationInput.placeholder = 'Berechne...'; }
   try {
     const [fromCoord, toCoord] = await Promise.all([geocodeAddress(prev.address), geocodeAddress(curr.address)]);
     const route = await fetchDrivingRoute(fromCoord, toCoord);
@@ -1813,6 +1833,9 @@ async function autoCalcSegment(trip, idx, container) {
     }
   } catch (e) {
     console.warn('automatische Streckenberechnung fehlgeschlagen', e);
+  } finally {
+    if (kmInput) { kmInput.disabled = false; kmInput.placeholder = '0'; }
+    if (durationInput) { durationInput.disabled = false; durationInput.placeholder = '0'; }
   }
 }
 
@@ -1896,6 +1919,7 @@ function renderStops() {
     if (stop.visited) return;
     const card = document.createElement('div');
     card.className = 'card';
+    card.dataset.stopId = stop.id;
     card.innerHTML = `
       <div class="card-row">
         <div style="flex:1">
