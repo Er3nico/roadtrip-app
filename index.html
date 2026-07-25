@@ -25,7 +25,46 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    padding-bottom: 40px;
+  }
+  .bottomnav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 15;
+    display: flex;
+    gap: 4px;
+    background: rgba(15, 23, 42, 0.96);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--card-border);
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+  .bottomnav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    padding: 8px 4px;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .bottomnav-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+  .bottomnav-item.active {
+    color: var(--accent-2);
+  }
+  .bottomnav-item:active {
+    transform: scale(0.95);
   }
   .appbar {
     position: sticky;
@@ -234,7 +273,7 @@
     font-weight: 600;
   }
   main {
-    padding: 0 16px 16px;
+    padding: 0 16px calc(84px + env(safe-area-inset-bottom, 0px));
   }
   .tab { display: none; }
   .tab.active { display: block; }
@@ -379,12 +418,6 @@
     </div>
   </div>
   <div class="drawer-nav">
-    <button data-tab="route" class="drawer-item active"><span class="drawer-item-icon">🚗</span><span>Route</span></button>
-    <button data-tab="sights" class="drawer-item"><span class="drawer-item-icon">📸</span><span>Sehenswürdigkeiten</span></button>
-    <button data-tab="hotels" class="drawer-item"><span class="drawer-item-icon">🏨</span><span>Hotels</span></button>
-  </div>
-  <div class="drawer-divider"></div>
-  <div class="drawer-nav">
     <button class="drawer-item" id="exportBtn"><span class="drawer-item-icon">📤</span><span>Trip exportieren</span></button>
     <button class="drawer-item" id="importBtn"><span class="drawer-item-icon">📥</span><span>Trip importieren</span></button>
     <button class="drawer-item drawer-item-danger" id="clearBtn"><span class="drawer-item-icon">🗑️</span><span>Alle Daten löschen</span></button>
@@ -430,6 +463,12 @@
     <button class="add-btn" id="addHotel">+ Hotel hinzufügen</button>
   </section>
 </main>
+
+<nav class="bottomnav">
+  <button data-tab="route" class="bottomnav-item active"><span class="bottomnav-icon">🚗</span><span>Route</span></button>
+  <button data-tab="sights" class="bottomnav-item"><span class="bottomnav-icon">📸</span><span>Sehenswürdigkeiten</span></button>
+  <button data-tab="hotels" class="bottomnav-item"><span class="bottomnav-icon">🏨</span><span>Hotels</span></button>
+</nav>
 
 <script>
 const STORAGE_KEY = 'roadtripAppData';
@@ -477,13 +516,12 @@ function calcTotals() {
 }
 
 // ---------- tabs ----------
-document.querySelectorAll('.drawer-item[data-tab]').forEach(btn => {
+document.querySelectorAll('.bottomnav-item[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.drawer-item[data-tab]').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.bottomnav-item[data-tab]').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    closeDrawer();
   });
 });
 
