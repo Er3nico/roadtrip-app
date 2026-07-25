@@ -1,4 +1,4 @@
-const CACHE_NAME = 'roadtrip-app-v12';
+const CACHE_NAME = 'roadtrip-app-v13';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {

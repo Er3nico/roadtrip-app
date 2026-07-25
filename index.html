@@ -24,6 +24,8 @@
     --on-accent: #ffffff;
     --danger: #f87171;
     --danger-bg: rgba(248, 113, 113, 0.14);
+    --success: #4ade80;
+    --success-bg: rgba(74, 222, 128, 0.14);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     --radius-lg: 14px;
     --radius-md: 10px;
@@ -43,6 +45,8 @@
       --accent-rgb: 37, 99, 235;
       --danger: #dc2626;
       --danger-bg: rgba(220, 38, 38, 0.10);
+      --success: #16a34a;
+      --success-bg: rgba(22, 163, 74, 0.10);
       --shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
     }
   }
@@ -299,6 +303,10 @@
   }
   .btn-danger-solid {
     background: var(--danger);
+    color: #ffffff;
+  }
+  .btn-success-solid {
+    background: #16a34a;
     color: #ffffff;
   }
   .trip-header {
@@ -748,6 +756,48 @@
     color: var(--muted);
     font-weight: 600;
     margin-top: 2px;
+  }
+  .visited-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .visited-toggle {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--tint);
+    color: var(--muted);
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-md);
+    padding: 8px 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .visited-toggle.is-visited {
+    background: var(--success-bg);
+    color: var(--success);
+    border-color: var(--success);
+  }
+  .locate-btn {
+    background: var(--tint);
+    color: var(--text);
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-md);
+    padding: 8px 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .locate-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
   }
 </style>
 </head>
@@ -1473,10 +1523,13 @@ const confirmOkBtn = document.getElementById('confirmOkBtn');
 const confirmCancelBtn = document.getElementById('confirmCancelBtn');
 let confirmCallback = null;
 
-function askConfirm(title, message, onConfirm) {
+function askConfirm(title, message, onConfirm, options) {
+  const opts = options || {};
   confirmTitle.textContent = title;
   confirmMessage.textContent = message;
   confirmCallback = onConfirm;
+  confirmOkBtn.textContent = opts.okLabel || 'Löschen';
+  confirmOkBtn.className = 'btn ' + (opts.okClass || 'btn-danger-solid');
   confirmOverlay.classList.add('open');
 }
 function closeConfirm() {
@@ -1605,6 +1658,75 @@ function offerLocalMigration() {
   );
 }
 
+// ---------- visited / "bin ich hier?" ----------
+function getCurrentPosition() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) { reject(new Error('no-geolocation')); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      (err) => reject(err),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
+  });
+}
+
+async function geocodeAddress(address) {
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(address);
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error('geocode-failed');
+  const data = await res.json();
+  if (!data.length) throw new Error('address-not-found');
+  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+}
+
+function distanceMeters(a, b) {
+  const R = 6371000;
+  const dLat = (b.lat - a.lat) * Math.PI / 180;
+  const dLon = (b.lon - a.lon) * Math.PI / 180;
+  const lat1 = a.lat * Math.PI / 180;
+  const lat2 = b.lat * Math.PI / 180;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+const NEAR_THRESHOLD_METERS = 500;
+
+async function checkIfHere(address, btnEl, onConfirmed) {
+  if (!address || !address.trim()) {
+    alert('Bitte zuerst eine Adresse eintragen.');
+    return;
+  }
+  const originalText = btnEl.textContent;
+  btnEl.disabled = true;
+  btnEl.textContent = '📍 Prüfe...';
+  try {
+    const [here, there] = await Promise.all([getCurrentPosition(), geocodeAddress(address)]);
+    const dist = distanceMeters(here, there);
+    if (dist <= NEAR_THRESHOLD_METERS) {
+      onConfirmed();
+    } else {
+      const km = Math.round(dist / 100) / 10;
+      askConfirm(
+        'Noch ' + km + ' km entfernt',
+        'Du bist laut Standort noch ' + km + ' km von der Adresse entfernt. Trotzdem als besucht markieren?',
+        onConfirmed,
+        { okLabel: 'Als besucht markieren', okClass: 'btn-success-solid' }
+      );
+    }
+  } catch (e) {
+    if (e && e.code === 1) {
+      alert('Standortzugriff wurde verweigert. Bitte in den Browser-/App-Einstellungen erlauben.');
+    } else if (e && e.message === 'address-not-found') {
+      alert('Die Adresse konnte nicht gefunden werden. Bitte Schreibweise prüfen.');
+    } else {
+      alert('Standort konnte nicht geprüft werden. Bitte später erneut versuchen.');
+    }
+  } finally {
+    btnEl.disabled = false;
+    btnEl.textContent = originalText;
+  }
+}
+
 // ---------- address map preview ----------
 function wireMapToggle(card) {
   const btn = card.querySelector('[data-action="toggle-map"]');
@@ -1660,6 +1782,10 @@ function renderStops() {
           <label>Adresse (Etappe ${idx + 1})</label>
           <input type="text" data-field="address" placeholder="z. B. Musterstraße 1, Musterstadt" value="${escapeHtml(stop.address || '')}">
         </div>
+      </div>
+      <div class="visited-row">
+        <button type="button" class="visited-toggle${stop.visited ? ' is-visited' : ''}" data-action="toggle-visited">${stop.visited ? '✓ Besucht' : '○ Nicht besucht'}</button>
+        <button type="button" class="locate-btn" data-action="check-here">📍 Bin ich hier?</button>
       </div>
       <button type="button" class="map-toggle-btn" data-action="toggle-map">🗺️ Auf Karte prüfen</button>
       <div class="map-frame" hidden>
@@ -1733,6 +1859,18 @@ function renderStops() {
         renderStops(); calcTotals();
       });
     });
+    card.querySelector('[data-action="toggle-visited"]').addEventListener('click', () => {
+      stop.visited = !stop.visited;
+      patchTrip(currentTripId, { stops: trip.stops });
+      withFocusPreserved(container, renderStops);
+    });
+    card.querySelector('[data-action="check-here"]').addEventListener('click', (e) => {
+      checkIfHere(stop.address, e.currentTarget, () => {
+        stop.visited = true;
+        patchTrip(currentTripId, { stops: trip.stops });
+        withFocusPreserved(container, renderStops);
+      });
+    });
     wireMapToggle(card);
     container.appendChild(card);
   });
@@ -1741,7 +1879,7 @@ function renderStops() {
 document.getElementById('addStop').addEventListener('click', () => {
   const trip = currentTripDraft;
   if (!trip) return;
-  trip.stops.push({ id: uid(), address: '', time: '', km: '', duration: '', note: '' });
+  trip.stops.push({ id: uid(), address: '', time: '', km: '', duration: '', note: '', visited: false });
   patchTrip(currentTripId, { stops: trip.stops });
   renderStops(); calcTotals();
 });
@@ -1770,6 +1908,10 @@ function renderSights() {
           <label>Adresse</label>
           <input type="text" data-field="address" placeholder="Adresse" value="${escapeHtml(sight.address || '')}">
         </div>
+      </div>
+      <div class="visited-row">
+        <button type="button" class="visited-toggle${sight.visited ? ' is-visited' : ''}" data-action="toggle-visited">${sight.visited ? '✓ Besucht' : '○ Nicht besucht'}</button>
+        <button type="button" class="locate-btn" data-action="check-here">📍 Bin ich hier?</button>
       </div>
       <button type="button" class="map-toggle-btn" data-action="toggle-map">🗺️ Auf Karte prüfen</button>
       <div class="map-frame" hidden>
@@ -1808,6 +1950,18 @@ function renderSights() {
         renderSights();
       });
     });
+    card.querySelector('[data-action="toggle-visited"]').addEventListener('click', () => {
+      sight.visited = !sight.visited;
+      patchTrip(currentTripId, { sights: trip.sights });
+      withFocusPreserved(container, renderSights);
+    });
+    card.querySelector('[data-action="check-here"]').addEventListener('click', (e) => {
+      checkIfHere(sight.address, e.currentTarget, () => {
+        sight.visited = true;
+        patchTrip(currentTripId, { sights: trip.sights });
+        withFocusPreserved(container, renderSights);
+      });
+    });
     wireMapToggle(card);
     container.appendChild(card);
   });
@@ -1816,7 +1970,7 @@ function renderSights() {
 document.getElementById('addSight').addEventListener('click', () => {
   const trip = currentTripDraft;
   if (!trip) return;
-  trip.sights.push({ id: uid(), name: '', address: '', note: '' });
+  trip.sights.push({ id: uid(), name: '', address: '', note: '', visited: false });
   patchTrip(currentTripId, { sights: trip.sights });
   renderSights();
 });
