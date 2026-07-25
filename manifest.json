@@ -43,5 +43,21 @@
       "type": "image/svg+xml",
       "purpose": "any"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/route.png",
+      "sizes": "1080x1700",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Route-Ansicht mit Etappen"
+    },
+    {
+      "src": "screenshots/hotels.png",
+      "sizes": "1080x1080",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Hotelverwaltung"
+    }
   ]
 }
