@@ -799,6 +799,58 @@
     opacity: 0.6;
     cursor: default;
   }
+  .visited-section {
+    margin-top: 4px;
+  }
+  .visited-section-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--tint);
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: inherit;
+    margin-bottom: 8px;
+  }
+  .visited-compact-list[hidden] {
+    display: none;
+  }
+  .visited-compact-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--card);
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-md);
+    margin-bottom: 6px;
+  }
+  .visited-compact-name {
+    color: var(--muted);
+    text-decoration: line-through;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.85rem;
+    flex: 1;
+  }
+  .visited-compact-undo {
+    background: transparent;
+    border: none;
+    color: var(--accent-solid);
+    font-size: 1.05rem;
+    cursor: pointer;
+    padding: 0 4px;
+    flex-shrink: 0;
+    font-family: inherit;
+  }
 </style>
 </head>
 <body>
@@ -1764,6 +1816,36 @@ function wireMapToggle(card) {
   });
 }
 
+// ---------- collapsed "visited" section (shared by stops/sights) ----------
+function renderVisitedSection(container, items, onUnmark) {
+  if (items.length === 0) return;
+  const section = document.createElement('div');
+  section.className = 'visited-section';
+  section.innerHTML = `
+    <button type="button" class="visited-section-toggle" data-action="toggle-section">
+      <span>✓ Besucht (${items.length})</span>
+      <span class="visited-section-chevron">▾</span>
+    </button>
+    <div class="visited-compact-list" hidden></div>
+  `;
+  const compactList = section.querySelector('.visited-compact-list');
+  items.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'visited-compact-row';
+    row.innerHTML = `
+      <span class="visited-compact-name">${escapeHtml(item.label || 'Ohne Namen')}</span>
+      <button type="button" class="visited-compact-undo" aria-label="Als nicht besucht markieren">↺</button>
+    `;
+    row.querySelector('.visited-compact-undo').addEventListener('click', () => onUnmark(item.id));
+    compactList.appendChild(row);
+  });
+  section.querySelector('[data-action="toggle-section"]').addEventListener('click', () => {
+    compactList.hidden = !compactList.hidden;
+    section.querySelector('.visited-section-chevron').textContent = compactList.hidden ? '▾' : '▴';
+  });
+  container.appendChild(section);
+}
+
 // ---------- STOPS (Route) ----------
 function renderStops() {
   const trip = currentTripDraft;
@@ -1774,6 +1856,7 @@ function renderStops() {
     container.innerHTML = '<div class="empty">Noch keine Etappen. Füge die erste Station hinzu.</div>';
   }
   trip.stops.forEach((stop, idx) => {
+    if (stop.visited) return;
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
@@ -1874,6 +1957,16 @@ function renderStops() {
     wireMapToggle(card);
     container.appendChild(card);
   });
+  renderVisitedSection(
+    container,
+    trip.stops.filter(s => s.visited).map(s => ({ id: s.id, label: s.address })),
+    (id) => {
+      const s = trip.stops.find(x => x.id === id);
+      if (s) s.visited = false;
+      patchTrip(currentTripId, { stops: trip.stops });
+      renderStops(); calcTotals();
+    }
+  );
 }
 
 document.getElementById('addStop').addEventListener('click', () => {
@@ -1894,6 +1987,7 @@ function renderSights() {
     container.innerHTML = '<div class="empty">Noch keine Sehenswürdigkeiten eingetragen.</div>';
   }
   trip.sights.forEach(sight => {
+    if (sight.visited) return;
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
@@ -1965,6 +2059,16 @@ function renderSights() {
     wireMapToggle(card);
     container.appendChild(card);
   });
+  renderVisitedSection(
+    container,
+    trip.sights.filter(s => s.visited).map(s => ({ id: s.id, label: s.name || s.address })),
+    (id) => {
+      const s = trip.sights.find(x => x.id === id);
+      if (s) s.visited = false;
+      patchTrip(currentTripId, { sights: trip.sights });
+      renderSights();
+    }
+  );
 }
 
 document.getElementById('addSight').addEventListener('click', () => {
