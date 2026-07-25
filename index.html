@@ -797,16 +797,9 @@
   .stop-collapse-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    gap: 6px;
     width: 100%;
-    background: transparent;
-    border: none;
-    padding: 0;
     margin-bottom: 14px;
-    cursor: pointer;
-    font-family: inherit;
-    text-align: left;
   }
   .stop-collapse-info {
     display: flex;
@@ -814,6 +807,34 @@
     gap: 10px;
     min-width: 0;
     flex: 1;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+  }
+  .stop-collapse-waze-mini {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    font-size: 1.05rem;
+    text-decoration: none;
+    border-radius: 8px;
+  }
+  .stop-collapse-waze-mini:active {
+    background: var(--tint);
+  }
+  .stop-collapse-chevron-btn {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    font-family: inherit;
   }
   .stop-collapse-badge {
     flex-shrink: 0;
@@ -2100,13 +2121,16 @@ function renderStops() {
     const isCollapsed = collapsedStops.has(stop.id);
     const addressPreview = (stop.address || '').trim();
     card.innerHTML = `
-      <button type="button" class="stop-collapse-header" data-action="toggle-collapse">
-        <span class="stop-collapse-info">
+      <div class="stop-collapse-header">
+        <button type="button" class="stop-collapse-info" data-action="toggle-collapse">
           <span class="stop-collapse-badge">${idx + 1}</span>
           <span class="stop-collapse-address${addressPreview ? '' : ' is-empty'}">${escapeHtml(addressPreview) || 'Ohne Adresse'}</span>
-        </span>
-        <span class="stop-collapse-chevron">${isCollapsed ? '▸' : '▾'}</span>
-      </button>
+        </button>
+        <a class="stop-collapse-waze-mini" href="${wazeUrl(stop.address)}" target="_blank" rel="noopener" aria-label="In Waze öffnen" title="In Waze öffnen">🚗</a>
+        <button type="button" class="stop-collapse-chevron-btn" data-action="toggle-collapse" aria-label="Ein-/Ausklappen">
+          <span class="stop-collapse-chevron">${isCollapsed ? '▸' : '▾'}</span>
+        </button>
+      </div>
       <div class="stop-collapse-body"${isCollapsed ? ' hidden' : ''}>
         <div class="card-row">
           <div style="flex:1">
@@ -2160,13 +2184,15 @@ function renderStops() {
         </div>
       </div>
     `;
-    card.querySelector('[data-action="toggle-collapse"]').addEventListener('click', () => {
-      const body = card.querySelector('.stop-collapse-body');
-      const chevron = card.querySelector('.stop-collapse-chevron');
-      const collapsing = !body.hidden;
-      body.hidden = collapsing;
-      chevron.textContent = collapsing ? '▸' : '▾';
-      if (collapsing) collapsedStops.add(stop.id); else collapsedStops.delete(stop.id);
+    card.querySelectorAll('[data-action="toggle-collapse"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const body = card.querySelector('.stop-collapse-body');
+        const chevron = card.querySelector('.stop-collapse-chevron');
+        const collapsing = !body.hidden;
+        body.hidden = collapsing;
+        chevron.textContent = collapsing ? '▸' : '▾';
+        if (collapsing) collapsedStops.add(stop.id); else collapsedStops.delete(stop.id);
+      });
     });
     card.querySelectorAll('[data-field]').forEach(inp => {
       inp.addEventListener('input', () => {
@@ -2174,6 +2200,7 @@ function renderStops() {
         if (inp.dataset.field === 'km' || inp.dataset.field === 'duration') calcTotals();
         if (inp.dataset.field === 'address') {
           card.querySelector('.btn-waze').setAttribute('href', wazeUrl(inp.value));
+          card.querySelector('.stop-collapse-waze-mini').setAttribute('href', wazeUrl(inp.value));
           const preview = card.querySelector('.stop-collapse-address');
           const trimmed = inp.value.trim();
           preview.textContent = trimmed || 'Ohne Adresse';
