@@ -333,6 +333,33 @@
     padding: 24px 0;
     font-size: 0.9rem;
   }
+  .map-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent-2);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 2px 0 10px;
+    text-align: left;
+    font-family: inherit;
+  }
+  .map-frame {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+    margin-bottom: 10px;
+    height: 200px;
+  }
+  .map-frame[hidden] {
+    display: none;
+  }
+  .map-frame iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
 </style>
 </head>
 <body>
@@ -542,6 +569,34 @@ document.getElementById('clearBtn').addEventListener('click', () => {
   closeDrawer();
 });
 
+// ---------- address map preview ----------
+function wireMapToggle(card) {
+  const btn = card.querySelector('[data-action="toggle-map"]');
+  const frame = card.querySelector('.map-frame');
+  const iframe = frame.querySelector('iframe');
+  const addressInput = card.querySelector('[data-field="address"]');
+  let debounceTimer;
+  function updateMapSrc() {
+    const addr = addressInput.value.trim();
+    iframe.src = addr ? 'https://maps.google.com/maps?q=' + encodeURIComponent(addr) + '&z=15&output=embed' : '';
+  }
+  btn.addEventListener('click', () => {
+    if (frame.hasAttribute('hidden')) {
+      frame.removeAttribute('hidden');
+      btn.textContent = '🗺️ Karte ausblenden';
+      updateMapSrc();
+    } else {
+      frame.setAttribute('hidden', '');
+      btn.textContent = '🗺️ Auf Karte prüfen';
+    }
+  });
+  addressInput.addEventListener('input', () => {
+    if (frame.hasAttribute('hidden')) return;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(updateMapSrc, 700);
+  });
+}
+
 // ---------- generic field update ----------
 function updateField(list, id, field, value) {
   const item = list.find(i => i.id === id);
@@ -566,6 +621,8 @@ function renderStops() {
           <input type="text" data-field="address" placeholder="z. B. Musterstraße 1, Musterstadt" value="${escapeHtml(stop.address || '')}">
         </div>
       </div>
+      <button type="button" class="map-toggle-btn" data-action="toggle-map">🗺️ Auf Karte prüfen</button>
+      <div class="map-frame" hidden><iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
       <div class="card-row two">
         <div>
           <label>Geplante Uhrzeit</label>
@@ -624,6 +681,7 @@ function renderStops() {
       state.stops = state.stops.filter(s => s.id !== stop.id);
       save(); renderStops(); calcTotals();
     });
+    wireMapToggle(card);
     container.appendChild(card);
   });
 }
@@ -656,6 +714,8 @@ function renderSights() {
           <input type="text" data-field="address" placeholder="Adresse" value="${escapeHtml(sight.address || '')}">
         </div>
       </div>
+      <button type="button" class="map-toggle-btn" data-action="toggle-map">🗺️ Auf Karte prüfen</button>
+      <div class="map-frame" hidden><iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
       <div class="card-row">
         <div style="flex:1">
           <label>Notiz (z. B. Öffnungszeiten, Eintritt)</label>
@@ -681,6 +741,7 @@ function renderSights() {
       state.sights = state.sights.filter(s => s.id !== sight.id);
       save(); renderSights();
     });
+    wireMapToggle(card);
     container.appendChild(card);
   });
 }
@@ -713,6 +774,8 @@ function renderHotels() {
           <input type="text" data-field="address" placeholder="Adresse" value="${escapeHtml(hotel.address || '')}">
         </div>
       </div>
+      <button type="button" class="map-toggle-btn" data-action="toggle-map">🗺️ Auf Karte prüfen</button>
+      <div class="map-frame" hidden><iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
       <div class="card-row two">
         <div>
           <label>Check-in</label>
@@ -758,6 +821,7 @@ function renderHotels() {
       state.hotels = state.hotels.filter(h => h.id !== hotel.id);
       save(); renderHotels();
     });
+    wireMapToggle(card);
     container.appendChild(card);
   });
 }
