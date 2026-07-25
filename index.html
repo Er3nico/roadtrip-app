@@ -1779,6 +1779,43 @@ async function checkIfHere(address, btnEl, onConfirmed) {
   }
 }
 
+// ---------- generic debounce (for auto route calc) ----------
+const debounceTimers = {};
+function debounce(key, fn, delay) {
+  clearTimeout(debounceTimers[key]);
+  debounceTimers[key] = setTimeout(fn, delay);
+}
+
+// ---------- automatic distance/duration between stops ----------
+async function fetchDrivingRoute(from, to) {
+  const url = 'https://router.project-osrm.org/route/v1/driving/' + from.lon + ',' + from.lat + ';' + to.lon + ',' + to.lat + '?overview=false';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('route-failed');
+  const data = await res.json();
+  if (!data.routes || !data.routes.length) throw new Error('no-route');
+  return { km: data.routes[0].distance / 1000, minutes: data.routes[0].duration / 60 };
+}
+
+async function autoCalcSegment(trip, idx, container) {
+  if (!trip || idx <= 0 || idx >= trip.stops.length) return;
+  const prev = trip.stops[idx - 1];
+  const curr = trip.stops[idx];
+  if (!prev.address || !prev.address.trim() || !curr.address || !curr.address.trim()) return;
+  try {
+    const [fromCoord, toCoord] = await Promise.all([geocodeAddress(prev.address), geocodeAddress(curr.address)]);
+    const route = await fetchDrivingRoute(fromCoord, toCoord);
+    curr.km = Math.round(route.km * 10) / 10;
+    curr.duration = Math.round(route.minutes);
+    patchTrip(currentTripId, { stops: trip.stops });
+    if (currentTripId && trip === currentTripDraft) {
+      withFocusPreserved(container, renderStops);
+      calcTotals();
+    }
+  } catch (e) {
+    console.warn('automatische Streckenberechnung fehlgeschlagen', e);
+  }
+}
+
 // ---------- address map preview ----------
 function wireMapToggle(card) {
   const btn = card.querySelector('[data-action="toggle-map"]');
@@ -1884,13 +1921,13 @@ function renderStops() {
           <input type="time" data-field="time" value="${escapeHtml(stop.time || '')}">
         </div>
         <div>
-          <label>Km ab vorheriger Etappe</label>
+          <label>Km ab vorheriger Etappe (automatisch)</label>
           <input type="number" step="0.1" data-field="km" placeholder="0" value="${stop.km ?? ''}">
         </div>
       </div>
       <div class="card-row two">
         <div>
-          <label>Fahrzeit ab vorheriger Etappe (Minuten)</label>
+          <label>Fahrzeit ab vorheriger Etappe (Minuten, automatisch)</label>
           <input type="number" step="1" data-field="duration" placeholder="0" value="${stop.duration ?? ''}">
         </div>
       </div>
@@ -1917,6 +1954,11 @@ function renderStops() {
         if (inp.dataset.field === 'km' || inp.dataset.field === 'duration') calcTotals();
         if (inp.dataset.field === 'address') {
           card.querySelector('.btn-waze').setAttribute('href', wazeUrl(inp.value));
+          debounce('routecalc-' + stop.id, () => autoCalcSegment(trip, idx, container), 1000);
+          if (idx + 1 < trip.stops.length) {
+            const nextStop = trip.stops[idx + 1];
+            debounce('routecalc-' + nextStop.id, () => autoCalcSegment(trip, idx + 1, container), 1000);
+          }
         }
         debouncedPatch('stops', currentTripId, { stops: trip.stops });
       });
@@ -1926,6 +1968,8 @@ function renderStops() {
         [trip.stops[idx - 1], trip.stops[idx]] = [trip.stops[idx], trip.stops[idx - 1]];
         patchTrip(currentTripId, { stops: trip.stops });
         withFocusPreserved(container, renderStops); calcTotals();
+        autoCalcSegment(trip, idx - 1, container);
+        autoCalcSegment(trip, idx, container);
       }
     });
     card.querySelector('[data-action="down"]').addEventListener('click', () => {
@@ -1933,6 +1977,8 @@ function renderStops() {
         [trip.stops[idx + 1], trip.stops[idx]] = [trip.stops[idx], trip.stops[idx + 1]];
         patchTrip(currentTripId, { stops: trip.stops });
         withFocusPreserved(container, renderStops); calcTotals();
+        autoCalcSegment(trip, idx, container);
+        autoCalcSegment(trip, idx + 1, container);
       }
     });
     card.querySelector('[data-action="delete"]').addEventListener('click', () => {
@@ -1940,6 +1986,7 @@ function renderStops() {
         trip.stops = trip.stops.filter(s => s.id !== stop.id);
         patchTrip(currentTripId, { stops: trip.stops });
         renderStops(); calcTotals();
+        autoCalcSegment(trip, idx, container);
       });
     });
     card.querySelector('[data-action="toggle-visited"]').addEventListener('click', () => {
