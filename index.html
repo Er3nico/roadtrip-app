@@ -732,10 +732,6 @@
     font-weight: 700;
     font-size: 0.9rem;
   }
-  .search-result-email {
-    font-size: 0.75rem;
-    color: var(--muted);
-  }
   .search-result-add {
     background: var(--accent-grad);
     color: var(--on-accent);
@@ -1427,7 +1423,6 @@ async function runInviteSearch(term) {
     row.innerHTML = `
       <div>
         <div class="search-result-name">${escapeHtml(p.displayName || 'Unbekannt')}</div>
-        <div class="search-result-email">${escapeHtml(p.email || '')}</div>
       </div>
       <button type="button" class="search-result-add" aria-label="Einladen">+</button>
     `;
