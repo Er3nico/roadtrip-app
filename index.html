@@ -48,6 +48,9 @@
     background: var(--bg);
     color: var(--text);
   }
+  .bottomnav[hidden] {
+    display: none;
+  }
   .bottomnav {
     position: fixed;
     left: 16px;
@@ -499,13 +502,79 @@
     border: 0;
     display: block;
   }
+  #dashboardView {
+    padding-top: 6px;
+  }
+  .dashboard-heading {
+    margin: 4px 0 16px;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+  .trip-card {
+    position: relative;
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 18px 44px 18px 18px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform 0.12s ease;
+  }
+  .trip-card:active {
+    transform: scale(0.98);
+  }
+  .trip-card-delete {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    background: var(--tint);
+    border: none;
+    border-radius: 999px;
+    color: var(--danger);
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .trip-card-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+    padding-right: 30px;
+  }
+  .trip-card-date {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .trip-card-stats {
+    display: flex;
+    gap: 8px;
+  }
+  .trip-card-stats span {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+    background: rgba(74, 222, 128, 0.14);
+    padding: 5px 10px;
+    border-radius: 999px;
+  }
+  body.dashboard-view main {
+    padding: 0 20px 24px;
+  }
 </style>
 </head>
 <body>
 
 <header class="appbar">
   <button class="icon-btn" id="menuToggle" aria-label="Menü öffnen">☰</button>
-  <span class="appbar-title">Roadtrip</span>
+  <span class="appbar-title" id="appbarTitle">Roadtrip</span>
 </header>
 
 <div class="drawer-overlay" id="drawerOverlay"></div>
@@ -518,9 +587,9 @@
     </div>
   </div>
   <div class="drawer-nav">
-    <button class="drawer-item" id="exportBtn"><span class="drawer-item-icon">📤</span><span>Trip exportieren</span></button>
-    <button class="drawer-item" id="importBtn"><span class="drawer-item-icon">📥</span><span>Trip importieren</span></button>
-    <button class="drawer-item drawer-item-danger" id="clearBtn"><span class="drawer-item-icon">🗑️</span><span>Alle Daten löschen</span></button>
+    <button class="drawer-item" id="exportBtn"><span class="drawer-item-icon">📤</span><span>Roadtrips exportieren</span></button>
+    <button class="drawer-item" id="importBtn"><span class="drawer-item-icon">📥</span><span>Roadtrips importieren</span></button>
+    <button class="drawer-item drawer-item-danger" id="clearBtn"><span class="drawer-item-icon">🗑️</span><span>Alle Roadtrips löschen</span></button>
   </div>
   <div class="drawer-divider"></div>
   <div class="drawer-nav">
@@ -550,73 +619,217 @@
 </div>
 
 <main>
-  <section class="trip-header">
-    <input id="tripName" type="text" placeholder="Name des Ausflugs" />
-    <input id="tripDate" type="date" />
-    <div class="totals">
-      <span>🛣️ <span id="totalKm">0</span> km</span>
-      <span>⏱️ <span id="totalTime">0h 0min</span></span>
-    </div>
+  <section id="dashboardView">
+    <h1 class="dashboard-heading">Deine Roadtrips</h1>
+    <div id="tripsList"></div>
+    <button class="add-btn" id="newTripBtn">+ Neuen Roadtrip erstellen</button>
   </section>
 
-  <section id="tab-route" class="tab active">
-    <div id="stopsList"></div>
-    <button class="add-btn" id="addStop">+ Etappe hinzufügen</button>
-  </section>
+  <section id="tripDetailView" hidden>
+    <section class="trip-header">
+      <input id="tripName" type="text" placeholder="Name des Ausflugs" />
+      <input id="tripDate" type="date" />
+      <div class="totals">
+        <span>🛣️ <span id="totalKm">0</span> km</span>
+        <span>⏱️ <span id="totalTime">0h 0min</span></span>
+      </div>
+    </section>
 
-  <section id="tab-sights" class="tab">
-    <div id="sightsList"></div>
-    <button class="add-btn" id="addSight">+ Sehenswürdigkeit hinzufügen</button>
-  </section>
+    <section id="tab-route" class="tab active">
+      <div id="stopsList"></div>
+      <button class="add-btn" id="addStop">+ Etappe hinzufügen</button>
+    </section>
 
-  <section id="tab-hotels" class="tab">
-    <div id="hotelsList"></div>
-    <button class="add-btn" id="addHotel">+ Hotel hinzufügen</button>
+    <section id="tab-sights" class="tab">
+      <div id="sightsList"></div>
+      <button class="add-btn" id="addSight">+ Sehenswürdigkeit hinzufügen</button>
+    </section>
+
+    <section id="tab-hotels" class="tab">
+      <div id="hotelsList"></div>
+      <button class="add-btn" id="addHotel">+ Hotel hinzufügen</button>
+    </section>
   </section>
 </main>
 
-<nav class="bottomnav">
+<nav class="bottomnav" id="bottomNav" hidden>
   <button data-tab="route" class="bottomnav-item active"><span class="bottomnav-icon">🚗</span><span>Route</span></button>
   <button data-tab="sights" class="bottomnav-item"><span class="bottomnav-icon">📸</span><span>Sehenswürdigkeiten</span></button>
   <button data-tab="hotels" class="bottomnav-item"><span class="bottomnav-icon">🏨</span><span>Hotels</span></button>
 </nav>
 
 <script>
-const STORAGE_KEY = 'roadtripAppData';
+const TRIPS_KEY = 'roadtripAppTrips';
+const LEGACY_STORAGE_KEY = 'roadtripAppData';
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
-function loadState() {
+function loadTrips() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(TRIPS_KEY);
     if (raw) return JSON.parse(raw);
   } catch (e) {}
-  return { tripName: '', tripDate: '', stops: [], sights: [], hotels: [] };
+  // migrate legacy single-trip data from before multi-trip support
+  try {
+    const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (legacyRaw) {
+      const legacy = JSON.parse(legacyRaw);
+      const hasContent = legacy && (legacy.tripName || (legacy.stops && legacy.stops.length) || (legacy.sights && legacy.sights.length) || (legacy.hotels && legacy.hotels.length));
+      if (hasContent) {
+        const migrated = [{
+          id: uid(),
+          tripName: legacy.tripName || '',
+          tripDate: legacy.tripDate || '',
+          stops: Array.isArray(legacy.stops) ? legacy.stops : [],
+          sights: Array.isArray(legacy.sights) ? legacy.sights : [],
+          hotels: Array.isArray(legacy.hotels) ? legacy.hotels : []
+        }];
+        localStorage.setItem(TRIPS_KEY, JSON.stringify(migrated));
+        return migrated;
+      }
+    }
+  } catch (e) {}
+  return [];
 }
 
-let state = loadState();
+let trips = loadTrips();
+let currentTripId = null;
 
-function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+function saveTrips() {
+  localStorage.setItem(TRIPS_KEY, JSON.stringify(trips));
+}
+
+function getCurrentTrip() {
+  return trips.find(t => t.id === currentTripId) || null;
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const parts = iso.split('-');
+  if (parts.length !== 3) return iso;
+  return parts[2] + '.' + parts[1] + '.' + parts[0];
 }
 
 function wazeUrl(address) {
   return 'https://waze.com/ul?q=' + encodeURIComponent(address || '') + '&navigate=yes';
 }
 
-// ---------- header ----------
+// ---------- view switching ----------
+const dashboardView = document.getElementById('dashboardView');
+const tripDetailView = document.getElementById('tripDetailView');
+const bottomNav = document.getElementById('bottomNav');
+const appbarTitle = document.getElementById('appbarTitle');
+const menuToggle = document.getElementById('menuToggle');
+
+function showDashboard() {
+  currentTripId = null;
+  dashboardView.hidden = false;
+  tripDetailView.hidden = true;
+  bottomNav.hidden = true;
+  document.body.classList.add('dashboard-view');
+  appbarTitle.textContent = 'Roadtrip';
+  menuToggle.textContent = '☰';
+  menuToggle.setAttribute('aria-label', 'Menü öffnen');
+  renderDashboard();
+}
+
+function openTrip(id) {
+  const trip = trips.find(t => t.id === id);
+  if (!trip) return;
+  currentTripId = id;
+  dashboardView.hidden = true;
+  tripDetailView.hidden = false;
+  bottomNav.hidden = false;
+  document.body.classList.remove('dashboard-view');
+  appbarTitle.textContent = trip.tripName || 'Roadtrip';
+  menuToggle.textContent = '←';
+  menuToggle.setAttribute('aria-label', 'Zurück zu deinen Roadtrips');
+  tripNameEl.value = trip.tripName || '';
+  tripDateEl.value = trip.tripDate || '';
+  document.querySelectorAll('.bottomnav-item[data-tab]').forEach(b => b.classList.remove('active'));
+  document.querySelector('.bottomnav-item[data-tab="route"]').classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-route').classList.add('active');
+  renderStops(); renderSights(); renderHotels(); calcTotals();
+}
+
+menuToggle.addEventListener('click', () => {
+  if (currentTripId === null) {
+    openDrawer();
+  } else {
+    showDashboard();
+  }
+});
+
+// ---------- dashboard ----------
+function renderDashboard() {
+  const container = document.getElementById('tripsList');
+  container.innerHTML = '';
+  if (trips.length === 0) {
+    container.innerHTML = '<div class="empty">Noch keine Roadtrips. Leg mit "+ Neuen Roadtrip erstellen" los.</div>';
+    return;
+  }
+  trips.forEach(trip => {
+    const card = document.createElement('div');
+    card.className = 'trip-card';
+    card.innerHTML = `
+      <button type="button" class="trip-card-delete" data-action="delete-trip" aria-label="Roadtrip löschen">🗑️</button>
+      <div class="trip-card-name">${escapeHtml(trip.tripName) || 'Unbenannter Roadtrip'}</div>
+      <div class="trip-card-date">${formatDate(trip.tripDate) || 'Kein Datum festgelegt'}</div>
+      <div class="trip-card-stats">
+        <span>🚗 ${trip.stops.length}</span>
+        <span>📸 ${trip.sights.length}</span>
+        <span>🏨 ${trip.hotels.length}</span>
+      </div>
+    `;
+    card.addEventListener('click', () => openTrip(trip.id));
+    card.querySelector('[data-action="delete-trip"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      askConfirm(
+        'Roadtrip löschen?',
+        '"' + (trip.tripName || 'Unbenannter Roadtrip') + '" wird inklusive Route, Sehenswürdigkeiten und Hotels unwiderruflich gelöscht.',
+        () => {
+          trips = trips.filter(t => t.id !== trip.id);
+          saveTrips();
+          renderDashboard();
+        }
+      );
+    });
+    container.appendChild(card);
+  });
+}
+
+document.getElementById('newTripBtn').addEventListener('click', () => {
+  const trip = { id: uid(), tripName: '', tripDate: '', stops: [], sights: [], hotels: [] };
+  trips.push(trip);
+  saveTrips();
+  openTrip(trip.id);
+});
+
+// ---------- trip header ----------
 const tripNameEl = document.getElementById('tripName');
 const tripDateEl = document.getElementById('tripDate');
-tripNameEl.value = state.tripName || '';
-tripDateEl.value = state.tripDate || '';
-tripNameEl.addEventListener('input', () => { state.tripName = tripNameEl.value; save(); });
-tripDateEl.addEventListener('input', () => { state.tripDate = tripDateEl.value; save(); });
+tripNameEl.addEventListener('input', () => {
+  const trip = getCurrentTrip();
+  if (!trip) return;
+  trip.tripName = tripNameEl.value;
+  appbarTitle.textContent = trip.tripName || 'Roadtrip';
+  saveTrips();
+});
+tripDateEl.addEventListener('input', () => {
+  const trip = getCurrentTrip();
+  if (!trip) return;
+  trip.tripDate = tripDateEl.value;
+  saveTrips();
+});
 
 function calcTotals() {
+  const trip = getCurrentTrip();
+  if (!trip) return;
   let km = 0, minutes = 0;
-  state.stops.forEach(s => {
+  trip.stops.forEach(s => {
     km += parseFloat(s.km) || 0;
     minutes += parseFloat(s.duration) || 0;
   });
@@ -650,7 +863,6 @@ function closeDrawer() {
   drawerOverlay.classList.remove('open');
   drawer.setAttribute('aria-hidden', 'true');
 }
-document.getElementById('menuToggle').addEventListener('click', openDrawer);
 drawerOverlay.addEventListener('click', closeDrawer);
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { closeDrawer(); closeAbout(); closeConfirm(); }
@@ -692,12 +904,11 @@ aboutOverlay.addEventListener('click', (e) => { if (e.target === aboutOverlay) c
 
 // ---------- export / import ----------
 document.getElementById('exportBtn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ trips }, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const safeName = (state.tripName || 'roadtrip').trim().replace(/[^a-z0-9äöüß_-]+/gi, '-').toLowerCase() || 'roadtrip';
   a.href = url;
-  a.download = safeName + '-backup.json';
+  a.download = 'roadtrip-backup.json';
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -714,18 +925,33 @@ importFile.addEventListener('change', () => {
   reader.onload = () => {
     try {
       const data = JSON.parse(reader.result);
-      state = {
-        tripName: data.tripName || '',
-        tripDate: data.tripDate || '',
-        stops: Array.isArray(data.stops) ? data.stops : [],
-        sights: Array.isArray(data.sights) ? data.sights : [],
-        hotels: Array.isArray(data.hotels) ? data.hotels : []
-      };
-      save();
-      tripNameEl.value = state.tripName;
-      tripDateEl.value = state.tripDate;
-      renderStops(); renderSights(); renderHotels(); calcTotals();
+      let importedTrips;
+      if (Array.isArray(data.trips)) {
+        importedTrips = data.trips;
+      } else if (Array.isArray(data)) {
+        importedTrips = data;
+      } else if (data && (data.stops || data.sights || data.hotels || data.tripName)) {
+        importedTrips = [data];
+      } else {
+        throw new Error('invalid backup format');
+      }
       closeDrawer();
+      askConfirm(
+        'Import überschreibt alle Roadtrips',
+        'Deine bestehenden Roadtrips werden durch die Datei ersetzt. Fortfahren?',
+        () => {
+          trips = importedTrips.map(t => ({
+            id: t.id || uid(),
+            tripName: t.tripName || '',
+            tripDate: t.tripDate || '',
+            stops: Array.isArray(t.stops) ? t.stops : [],
+            sights: Array.isArray(t.sights) ? t.sights : [],
+            hotels: Array.isArray(t.hotels) ? t.hotels : []
+          }));
+          saveTrips();
+          showDashboard();
+        }
+      );
     } catch (e) {
       alert('Diese Datei konnte nicht gelesen werden. Bitte eine gültige Roadtrip-Backup-Datei (JSON) wählen.');
     }
@@ -737,18 +963,16 @@ importFile.addEventListener('change', () => {
 document.getElementById('clearBtn').addEventListener('click', () => {
   closeDrawer();
   askConfirm(
-    'Alle Daten löschen?',
-    'Route, Sehenswürdigkeiten und Hotels werden vollständig entfernt.',
+    'Alle Roadtrips löschen?',
+    'Sämtliche Roadtrips mit allen Routen, Sehenswürdigkeiten und Hotels werden vollständig entfernt.',
     () => {
       askConfirm(
         'Wirklich ganz sicher?',
-        'Dieser Schritt kann nicht rückgängig gemacht werden. Jetzt endgültig alles löschen?',
+        'Dieser Schritt kann nicht rückgängig gemacht werden. Jetzt endgültig alle Roadtrips löschen?',
         () => {
-          state = { tripName: '', tripDate: '', stops: [], sights: [], hotels: [] };
-          save();
-          tripNameEl.value = '';
-          tripDateEl.value = '';
-          renderStops(); renderSights(); renderHotels(); calcTotals();
+          trips = [];
+          saveTrips();
+          showDashboard();
         }
       );
     }
@@ -796,17 +1020,19 @@ function wireMapToggle(card) {
 function updateField(list, id, field, value) {
   const item = list.find(i => i.id === id);
   if (item) item[field] = value;
-  save();
+  saveTrips();
 }
 
 // ---------- STOPS (Route) ----------
 function renderStops() {
+  const trip = getCurrentTrip();
+  if (!trip) return;
   const container = document.getElementById('stopsList');
   container.innerHTML = '';
-  if (state.stops.length === 0) {
+  if (trip.stops.length === 0) {
     container.innerHTML = '<div class="empty">Noch keine Etappen. Füge die erste Station hinzu.</div>';
   }
-  state.stops.forEach((stop, idx) => {
+  trip.stops.forEach((stop, idx) => {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
@@ -851,7 +1077,7 @@ function renderStops() {
         <div class="card-actions-row">
           <div class="reorder-h">
             <button class="btn btn-icon" data-action="up" ${idx === 0 ? 'disabled' : ''}>▲</button>
-            <button class="btn btn-icon" data-action="down" ${idx === state.stops.length - 1 ? 'disabled' : ''}>▼</button>
+            <button class="btn btn-icon" data-action="down" ${idx === trip.stops.length - 1 ? 'disabled' : ''}>▼</button>
           </div>
           <button class="btn btn-danger" data-action="delete">Löschen</button>
         </div>
@@ -859,7 +1085,7 @@ function renderStops() {
     `;
     card.querySelectorAll('[data-field]').forEach(inp => {
       inp.addEventListener('input', () => {
-        updateField(state.stops, stop.id, inp.dataset.field, inp.value);
+        updateField(trip.stops, stop.id, inp.dataset.field, inp.value);
         if (inp.dataset.field === 'km' || inp.dataset.field === 'duration') calcTotals();
         if (inp.dataset.field === 'address') {
           card.querySelector('.btn-waze').setAttribute('href', wazeUrl(inp.value));
@@ -868,20 +1094,20 @@ function renderStops() {
     });
     card.querySelector('[data-action="up"]').addEventListener('click', () => {
       if (idx > 0) {
-        [state.stops[idx - 1], state.stops[idx]] = [state.stops[idx], state.stops[idx - 1]];
-        save(); renderStops(); calcTotals();
+        [trip.stops[idx - 1], trip.stops[idx]] = [trip.stops[idx], trip.stops[idx - 1]];
+        saveTrips(); renderStops(); calcTotals();
       }
     });
     card.querySelector('[data-action="down"]').addEventListener('click', () => {
-      if (idx < state.stops.length - 1) {
-        [state.stops[idx + 1], state.stops[idx]] = [state.stops[idx], state.stops[idx + 1]];
-        save(); renderStops(); calcTotals();
+      if (idx < trip.stops.length - 1) {
+        [trip.stops[idx + 1], trip.stops[idx]] = [trip.stops[idx], trip.stops[idx + 1]];
+        saveTrips(); renderStops(); calcTotals();
       }
     });
     card.querySelector('[data-action="delete"]').addEventListener('click', () => {
       askConfirm('Etappe löschen?', 'Diese Etappe wird unwiderruflich entfernt.', () => {
-        state.stops = state.stops.filter(s => s.id !== stop.id);
-        save(); renderStops(); calcTotals();
+        trip.stops = trip.stops.filter(s => s.id !== stop.id);
+        saveTrips(); renderStops(); calcTotals();
       });
     });
     wireMapToggle(card);
@@ -890,18 +1116,22 @@ function renderStops() {
 }
 
 document.getElementById('addStop').addEventListener('click', () => {
-  state.stops.push({ id: uid(), address: '', time: '', km: '', duration: '', note: '' });
-  save(); renderStops(); calcTotals();
+  const trip = getCurrentTrip();
+  if (!trip) return;
+  trip.stops.push({ id: uid(), address: '', time: '', km: '', duration: '', note: '' });
+  saveTrips(); renderStops(); calcTotals();
 });
 
 // ---------- SIGHTS ----------
 function renderSights() {
+  const trip = getCurrentTrip();
+  if (!trip) return;
   const container = document.getElementById('sightsList');
   container.innerHTML = '';
-  if (state.sights.length === 0) {
+  if (trip.sights.length === 0) {
     container.innerHTML = '<div class="empty">Noch keine Sehenswürdigkeiten eingetragen.</div>';
   }
-  state.sights.forEach(sight => {
+  trip.sights.forEach(sight => {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
@@ -940,7 +1170,7 @@ function renderSights() {
     `;
     card.querySelectorAll('[data-field]').forEach(inp => {
       inp.addEventListener('input', () => {
-        updateField(state.sights, sight.id, inp.dataset.field, inp.value);
+        updateField(trip.sights, sight.id, inp.dataset.field, inp.value);
         if (inp.dataset.field === 'address') {
           card.querySelector('.btn-waze').setAttribute('href', wazeUrl(inp.value));
         }
@@ -948,8 +1178,8 @@ function renderSights() {
     });
     card.querySelector('[data-action="delete"]').addEventListener('click', () => {
       askConfirm('Sehenswürdigkeit löschen?', 'Dieser Eintrag wird unwiderruflich entfernt.', () => {
-        state.sights = state.sights.filter(s => s.id !== sight.id);
-        save(); renderSights();
+        trip.sights = trip.sights.filter(s => s.id !== sight.id);
+        saveTrips(); renderSights();
       });
     });
     wireMapToggle(card);
@@ -958,18 +1188,22 @@ function renderSights() {
 }
 
 document.getElementById('addSight').addEventListener('click', () => {
-  state.sights.push({ id: uid(), name: '', address: '', note: '' });
-  save(); renderSights();
+  const trip = getCurrentTrip();
+  if (!trip) return;
+  trip.sights.push({ id: uid(), name: '', address: '', note: '' });
+  saveTrips(); renderSights();
 });
 
 // ---------- HOTELS ----------
 function renderHotels() {
+  const trip = getCurrentTrip();
+  if (!trip) return;
   const container = document.getElementById('hotelsList');
   container.innerHTML = '';
-  if (state.hotels.length === 0) {
+  if (trip.hotels.length === 0) {
     container.innerHTML = '<div class="empty">Noch keine Hotels eingetragen.</div>';
   }
-  state.hotels.forEach(hotel => {
+  trip.hotels.forEach(hotel => {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
@@ -1028,7 +1262,7 @@ function renderHotels() {
     `;
     card.querySelectorAll('[data-field]').forEach(inp => {
       inp.addEventListener('input', () => {
-        updateField(state.hotels, hotel.id, inp.dataset.field, inp.value);
+        updateField(trip.hotels, hotel.id, inp.dataset.field, inp.value);
         if (inp.dataset.field === 'address') {
           card.querySelector('.btn-waze').setAttribute('href', wazeUrl(inp.value));
         }
@@ -1036,8 +1270,8 @@ function renderHotels() {
     });
     card.querySelector('[data-action="delete"]').addEventListener('click', () => {
       askConfirm('Hotel löschen?', 'Dieser Eintrag wird unwiderruflich entfernt.', () => {
-        state.hotels = state.hotels.filter(h => h.id !== hotel.id);
-        save(); renderHotels();
+        trip.hotels = trip.hotels.filter(h => h.id !== hotel.id);
+        saveTrips(); renderHotels();
       });
     });
     wireMapToggle(card);
@@ -1046,8 +1280,10 @@ function renderHotels() {
 }
 
 document.getElementById('addHotel').addEventListener('click', () => {
-  state.hotels.push({ id: uid(), name: '', address: '', checkin: '', checkout: '', price: '', bookingNumber: '', note: '' });
-  save(); renderHotels();
+  const trip = getCurrentTrip();
+  if (!trip) return;
+  trip.hotels.push({ id: uid(), name: '', address: '', checkin: '', checkout: '', price: '', bookingNumber: '', note: '' });
+  saveTrips(); renderHotels();
 });
 
 // ---------- utils ----------
@@ -1061,10 +1297,7 @@ function escapeHtml(str) {
 }
 
 // ---------- init ----------
-renderStops();
-renderSights();
-renderHotels();
-calcTotals();
+showDashboard();
 
 // ---------- service worker ----------
 if ('serviceWorker' in navigator) {
