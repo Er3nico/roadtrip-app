@@ -246,6 +246,19 @@
     width: 100%;
     margin-top: 10px;
   }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .modal-actions .btn {
+    flex: 1;
+    margin-top: 0;
+  }
+  .btn-danger-solid {
+    background: var(--danger);
+    color: #2b0a0c;
+  }
   .trip-header {
     padding: 4px 16px 14px;
   }
@@ -384,11 +397,40 @@
     font-family: inherit;
   }
   .map-frame {
+    position: relative;
     border-radius: 10px;
     overflow: hidden;
     border: 1px solid var(--card-border);
     margin-bottom: 10px;
     height: 200px;
+  }
+  .map-zoom-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 2;
+  }
+  .map-zoom-btn {
+    width: 32px;
+    height: 32px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+  .map-zoom-btn:active {
+    transform: scale(0.94);
   }
   .map-frame[hidden] {
     display: none;
@@ -435,6 +477,17 @@
     <p>Plane Routen, Sehenswürdigkeiten und Hotels für deinen nächsten Ausflug – inklusive direkter Waze-Navigation pro Eintrag.</p>
     <p class="modal-muted">Alle Daten werden ausschließlich lokal auf diesem Gerät gespeichert.</p>
     <button class="btn btn-waze" id="aboutClose">Schließen</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal-card">
+    <h2 id="confirmTitle">Wirklich löschen?</h2>
+    <p id="confirmMessage"></p>
+    <div class="modal-actions">
+      <button class="btn btn-icon" id="confirmCancelBtn">Abbrechen</button>
+      <button class="btn btn-danger-solid" id="confirmOkBtn">Löschen</button>
+    </div>
   </div>
 </div>
 
@@ -542,7 +595,33 @@ function closeDrawer() {
 document.getElementById('menuToggle').addEventListener('click', openDrawer);
 drawerOverlay.addEventListener('click', closeDrawer);
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closeDrawer(); closeAbout(); }
+  if (e.key === 'Escape') { closeDrawer(); closeAbout(); closeConfirm(); }
+});
+
+// ---------- confirm dialog ----------
+const confirmOverlay = document.getElementById('confirmOverlay');
+const confirmTitle = document.getElementById('confirmTitle');
+const confirmMessage = document.getElementById('confirmMessage');
+const confirmOkBtn = document.getElementById('confirmOkBtn');
+const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+let confirmCallback = null;
+
+function askConfirm(title, message, onConfirm) {
+  confirmTitle.textContent = title;
+  confirmMessage.textContent = message;
+  confirmCallback = onConfirm;
+  confirmOverlay.classList.add('open');
+}
+function closeConfirm() {
+  confirmOverlay.classList.remove('open');
+  confirmCallback = null;
+}
+confirmCancelBtn.addEventListener('click', closeConfirm);
+confirmOverlay.addEventListener('click', (e) => { if (e.target === confirmOverlay) closeConfirm(); });
+confirmOkBtn.addEventListener('click', () => {
+  const cb = confirmCallback;
+  closeConfirm();
+  if (cb) cb();
 });
 
 // ---------- about modal ----------
@@ -598,13 +677,24 @@ importFile.addEventListener('change', () => {
 });
 
 document.getElementById('clearBtn').addEventListener('click', () => {
-  if (!confirm('Wirklich alle Daten löschen? Route, Sehenswürdigkeiten und Hotels werden unwiderruflich entfernt.')) return;
-  state = { tripName: '', tripDate: '', stops: [], sights: [], hotels: [] };
-  save();
-  tripNameEl.value = '';
-  tripDateEl.value = '';
-  renderStops(); renderSights(); renderHotels(); calcTotals();
   closeDrawer();
+  askConfirm(
+    'Alle Daten löschen?',
+    'Route, Sehenswürdigkeiten und Hotels werden vollständig entfernt.',
+    () => {
+      askConfirm(
+        'Wirklich ganz sicher?',
+        'Dieser Schritt kann nicht rückgängig gemacht werden. Jetzt endgültig alles löschen?',
+        () => {
+          state = { tripName: '', tripDate: '', stops: [], sights: [], hotels: [] };
+          save();
+          tripNameEl.value = '';
+          tripDateEl.value = '';
+          renderStops(); renderSights(); renderHotels(); calcTotals();
+        }
+      );
+    }
+  );
 });
 
 // ---------- address map preview ----------
@@ -614,9 +704,10 @@ function wireMapToggle(card) {
   const iframe = frame.querySelector('iframe');
   const addressInput = card.querySelector('[data-field="address"]');
   let debounceTimer;
+  let zoom = 15;
   function updateMapSrc() {
     const addr = addressInput.value.trim();
-    iframe.src = addr ? 'https://maps.google.com/maps?q=' + encodeURIComponent(addr) + '&z=15&output=embed' : '';
+    iframe.src = addr ? 'https://maps.google.com/maps?q=' + encodeURIComponent(addr) + '&z=' + zoom + '&output=embed' : '';
   }
   btn.addEventListener('click', () => {
     if (frame.hasAttribute('hidden')) {
@@ -632,6 +723,14 @@ function wireMapToggle(card) {
     if (frame.hasAttribute('hidden')) return;
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(updateMapSrc, 700);
+  });
+  frame.querySelector('[data-zoom="in"]').addEventListener('click', () => {
+    zoom = Math.min(20, zoom + 1);
+    updateMapSrc();
+  });
+  frame.querySelector('[data-zoom="out"]').addEventListener('click', () => {
+    zoom = Math.max(3, zoom - 1);
+    updateMapSrc();
   });
 }
 
@@ -660,7 +759,13 @@ function renderStops() {
         </div>
       </div>
       <button type="button" class="map-toggle-btn" data-action="toggle-map">🗺️ Auf Karte prüfen</button>
-      <div class="map-frame" hidden><iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+      <div class="map-frame" hidden>
+        <iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <div class="map-zoom-controls">
+          <button type="button" class="map-zoom-btn" data-zoom="in" aria-label="Vergrößern">+</button>
+          <button type="button" class="map-zoom-btn" data-zoom="out" aria-label="Verkleinern">−</button>
+        </div>
+      </div>
       <div class="card-row two">
         <div>
           <label>Geplante Uhrzeit</label>
@@ -716,8 +821,10 @@ function renderStops() {
       }
     });
     card.querySelector('[data-action="delete"]').addEventListener('click', () => {
-      state.stops = state.stops.filter(s => s.id !== stop.id);
-      save(); renderStops(); calcTotals();
+      askConfirm('Etappe löschen?', 'Diese Etappe wird unwiderruflich entfernt.', () => {
+        state.stops = state.stops.filter(s => s.id !== stop.id);
+        save(); renderStops(); calcTotals();
+      });
     });
     wireMapToggle(card);
     container.appendChild(card);
@@ -753,7 +860,13 @@ function renderSights() {
         </div>
       </div>
       <button type="button" class="map-toggle-btn" data-action="toggle-map">🗺️ Auf Karte prüfen</button>
-      <div class="map-frame" hidden><iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+      <div class="map-frame" hidden>
+        <iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <div class="map-zoom-controls">
+          <button type="button" class="map-zoom-btn" data-zoom="in" aria-label="Vergrößern">+</button>
+          <button type="button" class="map-zoom-btn" data-zoom="out" aria-label="Verkleinern">−</button>
+        </div>
+      </div>
       <div class="card-row">
         <div style="flex:1">
           <label>Notiz (z. B. Öffnungszeiten, Eintritt)</label>
@@ -776,8 +889,10 @@ function renderSights() {
       });
     });
     card.querySelector('[data-action="delete"]').addEventListener('click', () => {
-      state.sights = state.sights.filter(s => s.id !== sight.id);
-      save(); renderSights();
+      askConfirm('Sehenswürdigkeit löschen?', 'Dieser Eintrag wird unwiderruflich entfernt.', () => {
+        state.sights = state.sights.filter(s => s.id !== sight.id);
+        save(); renderSights();
+      });
     });
     wireMapToggle(card);
     container.appendChild(card);
@@ -813,7 +928,13 @@ function renderHotels() {
         </div>
       </div>
       <button type="button" class="map-toggle-btn" data-action="toggle-map">🗺️ Auf Karte prüfen</button>
-      <div class="map-frame" hidden><iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+      <div class="map-frame" hidden>
+        <iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <div class="map-zoom-controls">
+          <button type="button" class="map-zoom-btn" data-zoom="in" aria-label="Vergrößern">+</button>
+          <button type="button" class="map-zoom-btn" data-zoom="out" aria-label="Verkleinern">−</button>
+        </div>
+      </div>
       <div class="card-row two">
         <div>
           <label>Check-in</label>
@@ -856,8 +977,10 @@ function renderHotels() {
       });
     });
     card.querySelector('[data-action="delete"]').addEventListener('click', () => {
-      state.hotels = state.hotels.filter(h => h.id !== hotel.id);
-      save(); renderHotels();
+      askConfirm('Hotel löschen?', 'Dieser Eintrag wird unwiderruflich entfernt.', () => {
+        state.hotels = state.hotels.filter(h => h.id !== hotel.id);
+        save(); renderHotels();
+      });
     });
     wireMapToggle(card);
     container.appendChild(card);
