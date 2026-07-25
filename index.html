@@ -794,6 +794,60 @@
   #remainingRouteMap .empty {
     padding: 40px 20px;
   }
+  .stop-collapse-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin-bottom: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+  }
+  .stop-collapse-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+  }
+  .stop-collapse-badge {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: var(--tint-strong);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .stop-collapse-address {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+  .stop-collapse-address.is-empty {
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .stop-collapse-chevron {
+    flex-shrink: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .stop-collapse-body[hidden] {
+    display: none;
+  }
   .visited-row {
     display: flex;
     gap: 8px;
@@ -1102,6 +1156,7 @@ let currentTripId = null;
 let currentTripDraft = null;
 let tripsUnsub = null;
 const writeTimers = {};
+const collapsedStops = new Set();
 const userProfileCache = new Map();
 
 // ---------- DOM refs ----------
@@ -2042,64 +2097,87 @@ function renderStops() {
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.stopId = stop.id;
+    const isCollapsed = collapsedStops.has(stop.id);
+    const addressPreview = (stop.address || '').trim();
     card.innerHTML = `
-      <div class="card-row">
-        <div style="flex:1">
-          <label>Adresse (Etappe ${idx + 1})</label>
-          <input type="text" data-field="address" placeholder="z. B. Musterstraße 1, Musterstadt" value="${escapeHtml(stop.address || '')}">
-        </div>
-      </div>
-      <div class="visited-row">
-        <button type="button" class="visited-toggle${stop.visited ? ' is-visited' : ''}" data-action="toggle-visited">${stop.visited ? '✓ Besucht' : '○ Nicht besucht'}</button>
-        <button type="button" class="locate-btn" data-action="check-here">📍 Bin ich hier?</button>
-      </div>
-      <button type="button" class="map-toggle-btn" data-action="toggle-map">🗺️ Auf Karte prüfen</button>
-      <div class="map-frame" hidden>
-        <iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-        <div class="map-zoom-controls">
-          <button type="button" class="map-zoom-btn" data-zoom="in" aria-label="Vergrößern">+</button>
-          <button type="button" class="map-zoom-btn" data-zoom="out" aria-label="Verkleinern">−</button>
-        </div>
-      </div>
-      <div class="card-row two">
-        <div>
-          <label>Geplante Uhrzeit</label>
-          <input type="time" data-field="time" value="${escapeHtml(stop.time || '')}">
-        </div>
-        <div>
-          <label>Km ab vorheriger Etappe (automatisch)</label>
-          <input type="number" step="0.1" data-field="km" placeholder="0" value="${stop.km ?? ''}">
-        </div>
-      </div>
-      <div class="card-row two">
-        <div>
-          <label>Fahrzeit ab vorheriger Etappe (Minuten, automatisch)</label>
-          <input type="number" step="1" data-field="duration" placeholder="0" value="${stop.duration ?? ''}">
-        </div>
-      </div>
-      <div class="card-row">
-        <div style="flex:1">
-          <label>Notiz</label>
-          <textarea data-field="note" placeholder="Notiz...">${escapeHtml(stop.note || '')}</textarea>
-        </div>
-      </div>
-      <div class="card-actions">
-        <a class="btn btn-waze" href="${wazeUrl(stop.address)}" target="_blank" rel="noopener">In Waze öffnen</a>
-        <div class="card-actions-row">
-          <div class="reorder-h">
-            <button class="btn btn-icon" data-action="up" ${idx === 0 ? 'disabled' : ''}>▲</button>
-            <button class="btn btn-icon" data-action="down" ${idx === trip.stops.length - 1 ? 'disabled' : ''}>▼</button>
+      <button type="button" class="stop-collapse-header" data-action="toggle-collapse">
+        <span class="stop-collapse-info">
+          <span class="stop-collapse-badge">${idx + 1}</span>
+          <span class="stop-collapse-address${addressPreview ? '' : ' is-empty'}">${escapeHtml(addressPreview) || 'Ohne Adresse'}</span>
+        </span>
+        <span class="stop-collapse-chevron">${isCollapsed ? '▸' : '▾'}</span>
+      </button>
+      <div class="stop-collapse-body"${isCollapsed ? ' hidden' : ''}>
+        <div class="card-row">
+          <div style="flex:1">
+            <label>Adresse (Etappe ${idx + 1})</label>
+            <input type="text" data-field="address" placeholder="z. B. Musterstraße 1, Musterstadt" value="${escapeHtml(stop.address || '')}">
           </div>
-          <button class="btn btn-danger" data-action="delete">Löschen</button>
+        </div>
+        <div class="visited-row">
+          <button type="button" class="visited-toggle${stop.visited ? ' is-visited' : ''}" data-action="toggle-visited">${stop.visited ? '✓ Besucht' : '○ Nicht besucht'}</button>
+          <button type="button" class="locate-btn" data-action="check-here">📍 Bin ich hier?</button>
+        </div>
+        <button type="button" class="map-toggle-btn" data-action="toggle-map">🗺️ Auf Karte prüfen</button>
+        <div class="map-frame" hidden>
+          <iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          <div class="map-zoom-controls">
+            <button type="button" class="map-zoom-btn" data-zoom="in" aria-label="Vergrößern">+</button>
+            <button type="button" class="map-zoom-btn" data-zoom="out" aria-label="Verkleinern">−</button>
+          </div>
+        </div>
+        <div class="card-row two">
+          <div>
+            <label>Geplante Uhrzeit</label>
+            <input type="time" data-field="time" value="${escapeHtml(stop.time || '')}">
+          </div>
+          <div>
+            <label>Km ab vorheriger Etappe (automatisch)</label>
+            <input type="number" step="0.1" data-field="km" placeholder="0" value="${stop.km ?? ''}">
+          </div>
+        </div>
+        <div class="card-row two">
+          <div>
+            <label>Fahrzeit ab vorheriger Etappe (Minuten, automatisch)</label>
+            <input type="number" step="1" data-field="duration" placeholder="0" value="${stop.duration ?? ''}">
+          </div>
+        </div>
+        <div class="card-row">
+          <div style="flex:1">
+            <label>Notiz</label>
+            <textarea data-field="note" placeholder="Notiz...">${escapeHtml(stop.note || '')}</textarea>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-waze" href="${wazeUrl(stop.address)}" target="_blank" rel="noopener">In Waze öffnen</a>
+          <div class="card-actions-row">
+            <div class="reorder-h">
+              <button class="btn btn-icon" data-action="up" ${idx === 0 ? 'disabled' : ''}>▲</button>
+              <button class="btn btn-icon" data-action="down" ${idx === trip.stops.length - 1 ? 'disabled' : ''}>▼</button>
+            </div>
+            <button class="btn btn-danger" data-action="delete">Löschen</button>
+          </div>
         </div>
       </div>
     `;
+    card.querySelector('[data-action="toggle-collapse"]').addEventListener('click', () => {
+      const body = card.querySelector('.stop-collapse-body');
+      const chevron = card.querySelector('.stop-collapse-chevron');
+      const collapsing = !body.hidden;
+      body.hidden = collapsing;
+      chevron.textContent = collapsing ? '▸' : '▾';
+      if (collapsing) collapsedStops.add(stop.id); else collapsedStops.delete(stop.id);
+    });
     card.querySelectorAll('[data-field]').forEach(inp => {
       inp.addEventListener('input', () => {
         stop[inp.dataset.field] = inp.value;
         if (inp.dataset.field === 'km' || inp.dataset.field === 'duration') calcTotals();
         if (inp.dataset.field === 'address') {
           card.querySelector('.btn-waze').setAttribute('href', wazeUrl(inp.value));
+          const preview = card.querySelector('.stop-collapse-address');
+          const trimmed = inp.value.trim();
+          preview.textContent = trimmed || 'Ohne Adresse';
+          preview.classList.toggle('is-empty', !trimmed);
           debounce('routecalc-' + stop.id, () => autoCalcSegment(trip, idx, container), 1000);
           if (idx + 1 < trip.stops.length) {
             const nextStop = trip.stops[idx + 1];
