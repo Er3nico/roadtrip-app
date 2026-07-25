@@ -9,6 +9,8 @@
 <meta name="theme-color" content="#f5f4fb" media="(prefers-color-scheme: light)">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root {
     --bg: #17181c;
@@ -757,6 +759,41 @@
     font-weight: 600;
     margin-top: 2px;
   }
+  .map-overlay-full {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+  .map-overlay-full.open {
+    opacity: 1;
+    visibility: visible;
+  }
+  .map-overlay-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--divider);
+    background: var(--bg);
+  }
+  .map-overlay-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+  #remainingRouteMap {
+    flex: 1;
+    background: var(--tint);
+  }
+  #remainingRouteMap .empty {
+    padding: 40px 20px;
+  }
   .visited-row {
     display: flex;
     gap: 8px;
@@ -949,6 +986,14 @@
   </div>
 </div>
 
+<div class="map-overlay-full" id="remainingRouteOverlay">
+  <div class="map-overlay-header">
+    <span class="map-overlay-title">Verbleibende Route</span>
+    <button class="icon-btn" id="remainingRouteCloseBtn" aria-label="Schließen">✕</button>
+  </div>
+  <div id="remainingRouteMap"></div>
+</div>
+
 <div class="modal-overlay" id="confirmOverlay">
   <div class="modal-card">
     <h2 id="confirmTitle">Wirklich löschen?</h2>
@@ -977,6 +1022,7 @@
       </div>
       <div id="memberList" class="member-list"></div>
       <button type="button" class="btn share-btn" id="shareBtn">👥 Person einladen</button>
+      <button type="button" class="btn share-btn" id="remainingRouteBtn">🗺️ Restroute anzeigen</button>
     </section>
 
     <section id="tab-route" class="tab active">
@@ -1538,6 +1584,82 @@ async function runInviteSearch(term) {
   }
 }
 
+// ---------- remaining route (map with all not-yet-visited stops) ----------
+const remainingRouteOverlay = document.getElementById('remainingRouteOverlay');
+const remainingRouteMapEl = document.getElementById('remainingRouteMap');
+let remainingRouteMapInstance = null;
+
+function closeRemainingRoute() {
+  remainingRouteOverlay.classList.remove('open');
+}
+
+async function openRemainingRoute() {
+  const trip = currentTripDraft;
+  if (!trip) return;
+  remainingRouteOverlay.classList.add('open');
+  remainingRouteMapEl.innerHTML = '<div class="empty">Lade Karte...</div>';
+
+  const remaining = trip.stops.filter(s => !s.visited && s.address && s.address.trim());
+  if (remaining.length === 0) {
+    remainingRouteMapEl.innerHTML = '<div class="empty">Keine offenen Etappen mit Adresse.</div>';
+    return;
+  }
+
+  const points = [];
+  for (let i = 0; i < remaining.length; i++) {
+    try {
+      const coord = await geocodeAddress(remaining[i].address);
+      points.push({ lat: coord.lat, lon: coord.lon, label: remaining[i].address, index: points.length + 1 });
+    } catch (e) {
+      console.warn('Geocoding für Restroute fehlgeschlagen', remaining[i].address, e);
+    }
+    if (i < remaining.length - 1) await new Promise(r => setTimeout(r, 300));
+  }
+
+  if (points.length === 0) {
+    remainingRouteMapEl.innerHTML = '<div class="empty">Keine der Adressen konnte gefunden werden.</div>';
+    return;
+  }
+
+  remainingRouteMapEl.innerHTML = '';
+  if (remainingRouteMapInstance) {
+    remainingRouteMapInstance.remove();
+    remainingRouteMapInstance = null;
+  }
+  const map = L.map(remainingRouteMapEl).setView([points[0].lat, points[0].lon], 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap Mitwirkende',
+    maxZoom: 19
+  }).addTo(map);
+  points.forEach(p => {
+    L.marker([p.lat, p.lon]).addTo(map).bindPopup(p.index + '. ' + escapeHtml(p.label));
+  });
+  const bounds = L.latLngBounds(points.map(p => [p.lat, p.lon]));
+  map.fitBounds(bounds, { padding: [30, 30] });
+  remainingRouteMapInstance = map;
+  setTimeout(() => map.invalidateSize(), 100);
+
+  if (points.length > 1) {
+    try {
+      const coordsParam = points.map(p => p.lon + ',' + p.lat).join(';');
+      const url = 'https://router.project-osrm.org/route/v1/driving/' + coordsParam + '?overview=full&geometries=geojson';
+      const res = await fetchWithTimeout(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.routes && data.routes[0]) {
+          const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+          L.polyline(coords, { color: '#3b82f6', weight: 4 }).addTo(map);
+        }
+      }
+    } catch (e) {
+      console.warn('Routenlinie konnte nicht geladen werden', e);
+    }
+  }
+}
+
+document.getElementById('remainingRouteBtn').addEventListener('click', openRemainingRoute);
+document.getElementById('remainingRouteCloseBtn').addEventListener('click', closeRemainingRoute);
+
 // ---------- tabs ----------
 document.querySelectorAll('.bottomnav-item[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1564,7 +1686,7 @@ function closeDrawer() {
 }
 drawerOverlay.addEventListener('click', closeDrawer);
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closeDrawer(); closeAbout(); closeConfirm(); closeProfile(); inviteOverlay.classList.remove('open'); }
+  if (e.key === 'Escape') { closeDrawer(); closeAbout(); closeConfirm(); closeProfile(); inviteOverlay.classList.remove('open'); closeRemainingRoute(); }
 });
 
 // ---------- confirm dialog ----------
