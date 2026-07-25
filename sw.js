@@ -1,4 +1,4 @@
-const CACHE_NAME = 'roadtrip-app-v9';
+const CACHE_NAME = 'roadtrip-app-v10';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -17,6 +17,7 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  if (new URL(event.request.url).origin !== self.location.origin) return;
 
   event.respondWith(
     fetch(event.request)

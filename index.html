@@ -270,6 +270,8 @@
     margin: 0 0 12px;
     font-size: 1.25rem;
     font-weight: 800;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
   .modal-card p {
     margin: 0 0 10px;
@@ -568,9 +570,218 @@
   body.dashboard-view main {
     padding: 0 20px 24px;
   }
+  #loginView {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  #loginView[hidden] {
+    display: none;
+  }
+  #appShell[hidden] {
+    display: none;
+  }
+  .login-card {
+    width: 100%;
+    max-width: 360px;
+    background: var(--card);
+    border-radius: 24px;
+    padding: 32px 26px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .login-logo {
+    font-size: 2.6rem;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .login-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  .login-subtitle {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .btn-google {
+    width: 100%;
+    background: var(--accent-grad);
+    color: var(--on-accent);
+    box-shadow: 0 6px 18px rgba(74, 222, 128, 0.22);
+  }
+  .login-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .login-divider::before, .login-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--divider);
+  }
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+  }
+  .login-form label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: -4px;
+  }
+  .login-form input {
+    width: 100%;
+    background: var(--tint);
+    border: 1px solid transparent;
+    color: var(--text);
+    border-radius: var(--radius-md);
+    padding: 11px 12px;
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  .login-form input:focus {
+    outline: none;
+    border-color: var(--accent-solid);
+  }
+  .login-error {
+    color: var(--danger);
+    font-size: 0.82rem;
+    font-weight: 600;
+    min-height: 1.2em;
+  }
+  .login-switch {
+    background: transparent;
+    border: none;
+    color: var(--accent-solid);
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px;
+    font-family: inherit;
+  }
+  .profile-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 999px;
+    background: var(--accent-grad);
+    color: var(--on-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0 auto 14px;
+  }
+  .member-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .member-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--tint);
+    padding: 6px 10px 6px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .member-chip .member-chip-remove {
+    background: transparent;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0;
+    line-height: 1;
+  }
+  .share-btn {
+    background: var(--tint);
+    color: var(--accent-solid);
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-top: 10px;
+  }
+  .search-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--tint);
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    margin-top: 8px;
+    cursor: pointer;
+  }
+  .search-result-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  .search-result-email {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .search-result-add {
+    background: var(--accent-grad);
+    color: var(--on-accent);
+    border: none;
+    border-radius: 999px;
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .trip-owner-badge {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-weight: 600;
+    margin-top: 2px;
+  }
 </style>
 </head>
 <body>
+
+<div id="loginView">
+  <div class="login-card">
+    <div class="login-logo">🧭</div>
+    <div class="login-title">Roadtrip Planer</div>
+    <div class="login-subtitle">Melde dich an, um mit deiner Familie gemeinsam an Roadtrips zu planen.</div>
+    <button class="btn btn-google" id="googleSignInBtn">Mit Google anmelden</button>
+    <div class="login-divider">oder</div>
+    <form class="login-form" id="emailForm">
+      <div id="nameField" hidden>
+        <label>Name</label>
+        <input type="text" id="loginName" placeholder="Dein Name" autocomplete="name">
+      </div>
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="deine@email.de" autocomplete="email" required>
+      <label>Passwort</label>
+      <input type="password" id="loginPassword" placeholder="Mindestens 6 Zeichen" autocomplete="current-password" required>
+      <div class="login-error" id="loginError"></div>
+      <button type="submit" class="btn btn-icon" id="emailSubmitBtn">Anmelden</button>
+    </form>
+    <button type="button" class="login-switch" id="loginSwitchBtn">Noch keinen Account? Registrieren</button>
+  </div>
+</div>
+
+<div id="appShell" hidden>
 
 <header class="appbar">
   <button class="icon-btn" id="menuToggle" aria-label="Menü öffnen">☰</button>
@@ -586,6 +797,10 @@
       <div class="drawer-subtitle">Deine Reise im Griff</div>
     </div>
   </div>
+  <div class="drawer-nav">
+    <button class="drawer-item" id="profileBtn"><span class="drawer-item-icon">👤</span><span>Profil</span></button>
+  </div>
+  <div class="drawer-divider"></div>
   <div class="drawer-nav">
     <button class="drawer-item" id="exportBtn"><span class="drawer-item-icon">📤</span><span>Roadtrips exportieren</span></button>
     <button class="drawer-item" id="importBtn"><span class="drawer-item-icon">📥</span><span>Roadtrips importieren</span></button>
@@ -604,6 +819,36 @@
     <p>Plane Routen, Sehenswürdigkeiten und Hotels für deinen nächsten Ausflug – inklusive direkter Waze-Navigation pro Eintrag.</p>
     <p class="modal-muted">Alle Daten werden ausschließlich lokal auf diesem Gerät gespeichert.</p>
     <button class="btn btn-waze" id="aboutClose">Schließen</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="profileOverlay">
+  <div class="modal-card">
+    <div class="profile-avatar" id="profileAvatar">?</div>
+    <h2 style="text-align:center;font-size:0.95rem;" id="profileEmail"></h2>
+    <div class="login-form">
+      <label>Name</label>
+      <input type="text" id="profileNameInput" placeholder="Dein Name">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-icon" id="profileCloseBtn">Schließen</button>
+      <button class="btn btn-waze" id="profileSaveBtn">Speichern</button>
+    </div>
+    <button class="btn btn-danger" id="signOutBtn" style="width:100%;margin-top:10px;">Abmelden</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="inviteOverlay">
+  <div class="modal-card">
+    <h2>Person einladen</h2>
+    <p class="modal-muted">Suche nach Name oder exakter Email-Adresse.</p>
+    <div class="login-form">
+      <input type="text" id="inviteSearchInput" placeholder="Name oder Email">
+    </div>
+    <div id="inviteResults"></div>
+    <div class="modal-actions">
+      <button class="btn btn-icon" id="inviteCloseBtn" style="width:100%">Schließen</button>
+    </div>
   </div>
 </div>
 
@@ -633,6 +878,8 @@
         <span>🛣️ <span id="totalKm">0</span> km</span>
         <span>⏱️ <span id="totalTime">0h 0min</span></span>
       </div>
+      <div id="memberList" class="member-list"></div>
+      <button type="button" class="btn share-btn" id="shareBtn">👥 Person einladen</button>
     </section>
 
     <section id="tab-route" class="tab active">
@@ -658,51 +905,39 @@
   <button data-tab="hotels" class="bottomnav-item"><span class="bottomnav-icon">🏨</span><span>Hotels</span></button>
 </nav>
 
-<script>
-const TRIPS_KEY = 'roadtripAppTrips';
-const LEGACY_STORAGE_KEY = 'roadtripAppData';
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  updateProfile, signOut, setPersistence, browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot,
+  collection, query, where, getDocs, serverTimestamp, arrayUnion, arrayRemove
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  projectId: "roadtrip-planer-vmtp6",
+  appId: "1:783030660145:web:184d42cbbd29e341b67910",
+  storageBucket: "roadtrip-planer-vmtp6.firebasestorage.app",
+  apiKey: "AIzaSyBhkc1l_7A3RUNM6RS8qQ0KE0nV47gnlD8",
+  authDomain: "roadtrip-planer-vmtp6.firebaseapp.com",
+  messagingSenderId: "783030660145"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = initializeFirestore(fbApp, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+});
+const googleProvider = new GoogleAuthProvider();
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
-
-function loadTrips() {
-  try {
-    const raw = localStorage.getItem(TRIPS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
-  // migrate legacy single-trip data from before multi-trip support
-  try {
-    const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
-    if (legacyRaw) {
-      const legacy = JSON.parse(legacyRaw);
-      const hasContent = legacy && (legacy.tripName || (legacy.stops && legacy.stops.length) || (legacy.sights && legacy.sights.length) || (legacy.hotels && legacy.hotels.length));
-      if (hasContent) {
-        const migrated = [{
-          id: uid(),
-          tripName: legacy.tripName || '',
-          tripDate: legacy.tripDate || '',
-          stops: Array.isArray(legacy.stops) ? legacy.stops : [],
-          sights: Array.isArray(legacy.sights) ? legacy.sights : [],
-          hotels: Array.isArray(legacy.hotels) ? legacy.hotels : []
-        }];
-        localStorage.setItem(TRIPS_KEY, JSON.stringify(migrated));
-        return migrated;
-      }
-    }
-  } catch (e) {}
-  return [];
-}
-
-let trips = loadTrips();
-let currentTripId = null;
-
-function saveTrips() {
-  localStorage.setItem(TRIPS_KEY, JSON.stringify(trips));
-}
-
-function getCurrentTrip() {
-  return trips.find(t => t.id === currentTripId) || null;
 }
 
 function formatDate(iso) {
@@ -716,15 +951,176 @@ function wazeUrl(address) {
   return 'https://waze.com/ul?q=' + encodeURIComponent(address || '') + '&navigate=yes';
 }
 
-// ---------- view switching ----------
+// ---------- state ----------
+let currentUser = null;
+let currentUserProfile = null;
+let trips = [];
+let currentTripId = null;
+let currentTripDraft = null;
+let tripsUnsub = null;
+const writeTimers = {};
+const userProfileCache = new Map();
+
+// ---------- DOM refs ----------
+const loginView = document.getElementById('loginView');
+const appShell = document.getElementById('appShell');
 const dashboardView = document.getElementById('dashboardView');
 const tripDetailView = document.getElementById('tripDetailView');
 const bottomNav = document.getElementById('bottomNav');
 const appbarTitle = document.getElementById('appbarTitle');
 const menuToggle = document.getElementById('menuToggle');
+const tripNameEl = document.getElementById('tripName');
+const tripDateEl = document.getElementById('tripDate');
+const shareBtn = document.getElementById('shareBtn');
 
+// ---------- auth ----------
+setPersistence(auth, browserLocalPersistence).catch(() => {});
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    try { await ensureUserProfile(user); } catch (e) { console.error(e); }
+    loginView.hidden = true;
+    appShell.hidden = false;
+    startTripsListener();
+    offerLocalMigration();
+  } else {
+    currentUser = null;
+    currentUserProfile = null;
+    stopTripsListener();
+    trips = [];
+    currentTripId = null;
+    currentTripDraft = null;
+    loginView.hidden = false;
+    appShell.hidden = true;
+  }
+});
+
+async function ensureUserProfile(user) {
+  const ref = doc(db, 'users', user.uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    const name = user.displayName || (user.email ? user.email.split('@')[0] : 'Unbekannt');
+    const profile = {
+      displayName: name,
+      displayNameLower: name.toLowerCase(),
+      email: (user.email || '').toLowerCase(),
+      createdAt: serverTimestamp()
+    };
+    await setDoc(ref, profile);
+    currentUserProfile = profile;
+  } else {
+    currentUserProfile = snap.data();
+  }
+  userProfileCache.set(user.uid, currentUserProfile);
+}
+
+// ---------- login form ----------
+const emailForm = document.getElementById('emailForm');
+const loginEmailEl = document.getElementById('loginEmail');
+const loginPasswordEl = document.getElementById('loginPassword');
+const loginNameEl = document.getElementById('loginName');
+const nameField = document.getElementById('nameField');
+const loginError = document.getElementById('loginError');
+const loginSwitchBtn = document.getElementById('loginSwitchBtn');
+const emailSubmitBtn = document.getElementById('emailSubmitBtn');
+let isRegisterMode = false;
+
+loginSwitchBtn.addEventListener('click', () => {
+  isRegisterMode = !isRegisterMode;
+  nameField.hidden = !isRegisterMode;
+  emailSubmitBtn.textContent = isRegisterMode ? 'Registrieren' : 'Anmelden';
+  loginSwitchBtn.textContent = isRegisterMode ? 'Schon einen Account? Anmelden' : 'Noch keinen Account? Registrieren';
+  loginError.textContent = '';
+});
+
+function authErrorMessage(err) {
+  const code = (err && err.code) || '';
+  if (code.includes('wrong-password') || code.includes('invalid-credential')) return 'Email oder Passwort falsch.';
+  if (code.includes('user-not-found')) return 'Kein Account mit dieser Email gefunden.';
+  if (code.includes('email-already-in-use')) return 'Diese Email ist schon registriert.';
+  if (code.includes('weak-password')) return 'Passwort muss mindestens 6 Zeichen haben.';
+  if (code.includes('invalid-email')) return 'Ungültige Email-Adresse.';
+  return 'Etwas ist schiefgelaufen. Bitte erneut versuchen.';
+}
+
+emailForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginError.textContent = '';
+  const email = loginEmailEl.value.trim();
+  const password = loginPasswordEl.value;
+  try {
+    if (isRegisterMode) {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      const name = loginNameEl.value.trim() || email.split('@')[0];
+      await updateProfile(cred.user, { displayName: name });
+      const profile = {
+        displayName: name,
+        displayNameLower: name.toLowerCase(),
+        email: email.toLowerCase(),
+        createdAt: serverTimestamp()
+      };
+      await setDoc(doc(db, 'users', cred.user.uid), profile);
+      currentUserProfile = profile;
+      userProfileCache.set(cred.user.uid, profile);
+    } else {
+      await signInWithEmailAndPassword(auth, email, password);
+    }
+  } catch (err) {
+    loginError.textContent = authErrorMessage(err);
+  }
+});
+
+document.getElementById('googleSignInBtn').addEventListener('click', async () => {
+  loginError.textContent = '';
+  try {
+    await signInWithPopup(auth, googleProvider);
+  } catch (err) {
+    if (err && err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+      loginError.textContent = authErrorMessage(err);
+    }
+  }
+});
+
+// ---------- profile modal ----------
+const profileOverlay = document.getElementById('profileOverlay');
+const profileAvatar = document.getElementById('profileAvatar');
+const profileEmail = document.getElementById('profileEmail');
+const profileNameInput = document.getElementById('profileNameInput');
+
+function openProfile() {
+  const name = currentUserProfile ? currentUserProfile.displayName : '';
+  profileAvatar.textContent = (name || '?').charAt(0).toUpperCase();
+  profileEmail.textContent = currentUser ? currentUser.email : '';
+  profileNameInput.value = name || '';
+  profileOverlay.classList.add('open');
+}
+function closeProfile() { profileOverlay.classList.remove('open'); }
+document.getElementById('profileBtn').addEventListener('click', () => { closeDrawer(); openProfile(); });
+document.getElementById('profileCloseBtn').addEventListener('click', closeProfile);
+profileOverlay.addEventListener('click', (e) => { if (e.target === profileOverlay) closeProfile(); });
+document.getElementById('profileSaveBtn').addEventListener('click', async () => {
+  const name = profileNameInput.value.trim();
+  if (!name || !currentUser) return;
+  await setDoc(doc(db, 'users', currentUser.uid), {
+    displayName: name,
+    displayNameLower: name.toLowerCase(),
+    email: (currentUser.email || '').toLowerCase()
+  }, { merge: true });
+  currentUserProfile = { ...currentUserProfile, displayName: name, displayNameLower: name.toLowerCase() };
+  userProfileCache.set(currentUser.uid, currentUserProfile);
+  if (currentTripId) renderMembers();
+  closeProfile();
+});
+document.getElementById('signOutBtn').addEventListener('click', () => {
+  closeProfile();
+  askConfirm('Abmelden?', 'Du kannst dich jederzeit wieder anmelden.', () => signOut(auth));
+});
+
+// ---------- view switching ----------
 function showDashboard() {
   currentTripId = null;
+  currentTripDraft = null;
   dashboardView.hidden = false;
   tripDetailView.hidden = true;
   bottomNav.hidden = true;
@@ -735,10 +1131,24 @@ function showDashboard() {
   renderDashboard();
 }
 
+function cloneTrip(trip) {
+  return {
+    id: trip.id,
+    ownerId: trip.ownerId,
+    memberIds: (trip.memberIds || []).slice(),
+    tripName: trip.tripName || '',
+    tripDate: trip.tripDate || '',
+    stops: (trip.stops || []).map(s => ({ ...s })),
+    sights: (trip.sights || []).map(s => ({ ...s })),
+    hotels: (trip.hotels || []).map(h => ({ ...h }))
+  };
+}
+
 function openTrip(id) {
   const trip = trips.find(t => t.id === id);
   if (!trip) return;
   currentTripId = id;
+  currentTripDraft = cloneTrip(trip);
   dashboardView.hidden = true;
   tripDetailView.hidden = false;
   bottomNav.hidden = false;
@@ -752,7 +1162,7 @@ function openTrip(id) {
   document.querySelector('.bottomnav-item[data-tab="route"]').classList.add('active');
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-route').classList.add('active');
-  renderStops(); renderSights(); renderHotels(); calcTotals();
+  renderStops(); renderSights(); renderHotels(); calcTotals(); renderMembers();
 }
 
 menuToggle.addEventListener('click', () => {
@@ -763,6 +1173,92 @@ menuToggle.addEventListener('click', () => {
   }
 });
 
+// ---------- trips (dashboard + open trip) live listener ----------
+function startTripsListener() {
+  stopTripsListener();
+  const q = query(collection(db, 'trips'), where('memberIds', 'array-contains', currentUser.uid));
+  tripsUnsub = onSnapshot(q, (snap) => {
+    trips = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (currentTripId === null) {
+      renderDashboard();
+      return;
+    }
+    const fresh = trips.find(t => t.id === currentTripId);
+    if (!fresh) { showDashboard(); return; }
+    syncDraftFromFresh(fresh);
+  }, (err) => {
+    console.error('trips listener error', err);
+  });
+}
+function stopTripsListener() {
+  if (tripsUnsub) { tripsUnsub(); tripsUnsub = null; }
+}
+
+function syncDraftFromFresh(fresh) {
+  if (!currentTripDraft) return;
+  let listsChanged = false;
+  if (!writeTimers.stops) { currentTripDraft.stops = (fresh.stops || []).map(s => ({ ...s })); listsChanged = true; }
+  if (!writeTimers.sights) { currentTripDraft.sights = (fresh.sights || []).map(s => ({ ...s })); listsChanged = true; }
+  if (!writeTimers.hotels) { currentTripDraft.hotels = (fresh.hotels || []).map(h => ({ ...h })); listsChanged = true; }
+  if (!writeTimers.tripHeader) {
+    currentTripDraft.tripName = fresh.tripName || '';
+    currentTripDraft.tripDate = fresh.tripDate || '';
+    if (document.activeElement !== tripNameEl) tripNameEl.value = currentTripDraft.tripName;
+    if (document.activeElement !== tripDateEl) tripDateEl.value = currentTripDraft.tripDate;
+    appbarTitle.textContent = currentTripDraft.tripName || 'Roadtrip';
+  }
+  currentTripDraft.memberIds = fresh.memberIds || [];
+  currentTripDraft.ownerId = fresh.ownerId;
+  if (listsChanged) {
+    if (!writeTimers.stops) withFocusPreserved(document.getElementById('stopsList'), renderStops);
+    if (!writeTimers.sights) withFocusPreserved(document.getElementById('sightsList'), renderSights);
+    if (!writeTimers.hotels) withFocusPreserved(document.getElementById('hotelsList'), renderHotels);
+    calcTotals();
+  }
+  renderMembers();
+}
+
+function tripRef(id) { return doc(db, 'trips', id); }
+
+function patchTrip(id, data) {
+  return updateDoc(tripRef(id), data).catch(e => console.error('patchTrip failed', e));
+}
+
+function debouncedPatch(key, id, data, delay = 600) {
+  clearTimeout(writeTimers[key]);
+  writeTimers[key] = setTimeout(() => {
+    delete writeTimers[key];
+    patchTrip(id, data);
+  }, delay);
+}
+
+// ---------- focus-preserving re-render ----------
+function withFocusPreserved(container, renderFn) {
+  const active = document.activeElement;
+  let restore = null;
+  if (active && container.contains(active)) {
+    const card = active.closest('.card');
+    const cards = Array.from(container.children);
+    restore = {
+      field: active.dataset.field,
+      cardIndex: card ? cards.indexOf(card) : -1,
+      selStart: typeof active.selectionStart === 'number' ? active.selectionStart : null,
+      selEnd: typeof active.selectionEnd === 'number' ? active.selectionEnd : null
+    };
+  }
+  renderFn();
+  if (restore && restore.cardIndex >= 0 && restore.field) {
+    const newCard = container.children[restore.cardIndex];
+    const newField = newCard && newCard.querySelector('[data-field="' + restore.field + '"]');
+    if (newField) {
+      newField.focus();
+      if (restore.selStart !== null && newField.setSelectionRange) {
+        try { newField.setSelectionRange(restore.selStart, restore.selEnd); } catch (e) {}
+      }
+    }
+  }
+}
+
 // ---------- dashboard ----------
 function renderDashboard() {
   const container = document.getElementById('tripsList');
@@ -772,64 +1268,69 @@ function renderDashboard() {
     return;
   }
   trips.forEach(trip => {
+    const isOwner = trip.ownerId === currentUser.uid;
     const card = document.createElement('div');
     card.className = 'trip-card';
     card.innerHTML = `
-      <button type="button" class="trip-card-delete" data-action="delete-trip" aria-label="Roadtrip löschen">🗑️</button>
+      <button type="button" class="trip-card-delete" data-action="delete-trip" aria-label="${isOwner ? 'Roadtrip löschen' : 'Roadtrip verlassen'}">${isOwner ? '🗑️' : '🚪'}</button>
       <div class="trip-card-name">${escapeHtml(trip.tripName) || 'Unbenannter Roadtrip'}</div>
       <div class="trip-card-date">${formatDate(trip.tripDate) || 'Kein Datum festgelegt'}</div>
       <div class="trip-card-stats">
-        <span>🚗 ${trip.stops.length}</span>
-        <span>📸 ${trip.sights.length}</span>
-        <span>🏨 ${trip.hotels.length}</span>
+        <span>🚗 ${(trip.stops || []).length}</span>
+        <span>📸 ${(trip.sights || []).length}</span>
+        <span>🏨 ${(trip.hotels || []).length}</span>
       </div>
+      ${!isOwner ? '<div class="trip-owner-badge">Geteilter Roadtrip</div>' : ''}
     `;
     card.addEventListener('click', () => openTrip(trip.id));
     card.querySelector('[data-action="delete-trip"]').addEventListener('click', (e) => {
       e.stopPropagation();
-      askConfirm(
-        'Roadtrip löschen?',
-        '"' + (trip.tripName || 'Unbenannter Roadtrip') + '" wird inklusive Route, Sehenswürdigkeiten und Hotels unwiderruflich gelöscht.',
-        () => {
-          trips = trips.filter(t => t.id !== trip.id);
-          saveTrips();
-          renderDashboard();
-        }
-      );
+      if (isOwner) {
+        askConfirm(
+          'Roadtrip löschen?',
+          '"' + (trip.tripName || 'Unbenannter Roadtrip') + '" wird inklusive Route, Sehenswürdigkeiten und Hotels unwiderruflich gelöscht.',
+          () => { deleteDoc(tripRef(trip.id)).catch(err => console.error(err)); }
+        );
+      } else {
+        askConfirm(
+          'Roadtrip verlassen?',
+          'Du verlierst den Zugriff auf "' + (trip.tripName || 'Unbenannter Roadtrip') + '". Der Besitzer kann dich jederzeit erneut einladen.',
+          () => { patchTrip(trip.id, { memberIds: arrayRemove(currentUser.uid) }); }
+        );
+      }
     });
     container.appendChild(card);
   });
 }
 
-document.getElementById('newTripBtn').addEventListener('click', () => {
-  const trip = { id: uid(), tripName: '', tripDate: '', stops: [], sights: [], hotels: [] };
-  trips.push(trip);
-  saveTrips();
-  openTrip(trip.id);
+document.getElementById('newTripBtn').addEventListener('click', async () => {
+  const ref = await addDoc(collection(db, 'trips'), {
+    ownerId: currentUser.uid,
+    memberIds: [currentUser.uid],
+    tripName: '', tripDate: '',
+    stops: [], sights: [], hotels: [],
+    createdAt: serverTimestamp()
+  });
+  openTrip(ref.id);
 });
 
 // ---------- trip header ----------
-const tripNameEl = document.getElementById('tripName');
-const tripDateEl = document.getElementById('tripDate');
 tripNameEl.addEventListener('input', () => {
-  const trip = getCurrentTrip();
-  if (!trip) return;
-  trip.tripName = tripNameEl.value;
-  appbarTitle.textContent = trip.tripName || 'Roadtrip';
-  saveTrips();
+  if (!currentTripDraft) return;
+  currentTripDraft.tripName = tripNameEl.value;
+  appbarTitle.textContent = currentTripDraft.tripName || 'Roadtrip';
+  debouncedPatch('tripHeader', currentTripId, { tripName: currentTripDraft.tripName, tripDate: currentTripDraft.tripDate });
 });
 tripDateEl.addEventListener('input', () => {
-  const trip = getCurrentTrip();
-  if (!trip) return;
-  trip.tripDate = tripDateEl.value;
-  saveTrips();
+  if (!currentTripDraft) return;
+  currentTripDraft.tripDate = tripDateEl.value;
+  debouncedPatch('tripHeader', currentTripId, { tripName: currentTripDraft.tripName, tripDate: currentTripDraft.tripDate });
 });
 
 function calcTotals() {
-  const trip = getCurrentTrip();
-  if (!trip) return;
+  if (!currentTripDraft) return;
   let km = 0, minutes = 0;
-  trip.stops.forEach(s => {
+  currentTripDraft.stops.forEach(s => {
     km += parseFloat(s.km) || 0;
     minutes += parseFloat(s.duration) || 0;
   });
@@ -837,6 +1338,108 @@ function calcTotals() {
   const h = Math.floor(minutes / 60);
   const m = Math.round(minutes % 60);
   document.getElementById('totalTime').textContent = h + 'h ' + m + 'min';
+}
+
+// ---------- members / invite ----------
+async function getUserProfile(uidVal) {
+  if (userProfileCache.has(uidVal)) return userProfileCache.get(uidVal);
+  const snap = await getDoc(doc(db, 'users', uidVal));
+  const profile = snap.exists() ? snap.data() : { displayName: 'Unbekannt', email: '' };
+  userProfileCache.set(uidVal, profile);
+  return profile;
+}
+
+async function renderMembers() {
+  if (!currentTripDraft) return;
+  const isOwner = currentTripDraft.ownerId === currentUser.uid;
+  shareBtn.style.display = isOwner ? 'block' : 'none';
+  const container = document.getElementById('memberList');
+  const ids = currentTripDraft.memberIds || [];
+  const profiles = await Promise.all(ids.map(id => getUserProfile(id).then(p => ({ id, p }))));
+  container.innerHTML = '';
+  profiles.forEach(({ id, p }) => {
+    const chip = document.createElement('span');
+    chip.className = 'member-chip';
+    const isOwnerChip = id === currentTripDraft.ownerId;
+    const canRemove = isOwner && id !== currentUser.uid;
+    chip.innerHTML = `<span>${escapeHtml(p.displayName || p.email || 'Unbekannt')}${isOwnerChip ? ' 👑' : ''}</span>`;
+    if (canRemove) {
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'member-chip-remove';
+      removeBtn.setAttribute('aria-label', 'Entfernen');
+      removeBtn.textContent = '✕';
+      removeBtn.addEventListener('click', () => {
+        askConfirm('Mitglied entfernen?', (p.displayName || 'Diese Person') + ' verliert den Zugriff auf diesen Roadtrip.', () => {
+          patchTrip(currentTripId, { memberIds: arrayRemove(id) });
+        });
+      });
+      chip.appendChild(removeBtn);
+    }
+    container.appendChild(chip);
+  });
+}
+
+const inviteOverlay = document.getElementById('inviteOverlay');
+const inviteSearchInput = document.getElementById('inviteSearchInput');
+const inviteResults = document.getElementById('inviteResults');
+
+shareBtn.addEventListener('click', () => {
+  inviteSearchInput.value = '';
+  inviteResults.innerHTML = '';
+  inviteOverlay.classList.add('open');
+  setTimeout(() => inviteSearchInput.focus(), 50);
+});
+document.getElementById('inviteCloseBtn').addEventListener('click', () => inviteOverlay.classList.remove('open'));
+inviteOverlay.addEventListener('click', (e) => { if (e.target === inviteOverlay) inviteOverlay.classList.remove('open'); });
+
+let inviteSearchTimer;
+inviteSearchInput.addEventListener('input', () => {
+  clearTimeout(inviteSearchTimer);
+  const term = inviteSearchInput.value.trim();
+  if (term.length < 2) { inviteResults.innerHTML = ''; return; }
+  inviteSearchTimer = setTimeout(() => runInviteSearch(term), 350);
+});
+
+async function runInviteSearch(term) {
+  const lower = term.toLowerCase();
+  const results = new Map();
+  try {
+    const byEmailSnap = await getDocs(query(collection(db, 'users'), where('email', '==', lower)));
+    byEmailSnap.forEach(d => results.set(d.id, d.data()));
+    const byNameSnap = await getDocs(query(
+      collection(db, 'users'),
+      where('displayNameLower', '>=', lower),
+      where('displayNameLower', '<=', lower + '')
+    ));
+    byNameSnap.forEach(d => results.set(d.id, d.data()));
+  } catch (e) {
+    console.error('invite search failed', e);
+  }
+  const memberIds = currentTripDraft ? currentTripDraft.memberIds : [];
+  inviteResults.innerHTML = '';
+  let count = 0;
+  results.forEach((p, id) => {
+    if (id === currentUser.uid || memberIds.includes(id)) return;
+    count++;
+    const row = document.createElement('div');
+    row.className = 'search-result';
+    row.innerHTML = `
+      <div>
+        <div class="search-result-name">${escapeHtml(p.displayName || 'Unbekannt')}</div>
+        <div class="search-result-email">${escapeHtml(p.email || '')}</div>
+      </div>
+      <button type="button" class="search-result-add" aria-label="Einladen">+</button>
+    `;
+    row.querySelector('.search-result-add').addEventListener('click', () => {
+      patchTrip(currentTripId, { memberIds: arrayUnion(id) });
+      inviteOverlay.classList.remove('open');
+    });
+    inviteResults.appendChild(row);
+  });
+  if (count === 0) {
+    inviteResults.innerHTML = '<div class="empty">Keine passende Person gefunden.</div>';
+  }
 }
 
 // ---------- tabs ----------
@@ -865,7 +1468,7 @@ function closeDrawer() {
 }
 drawerOverlay.addEventListener('click', closeDrawer);
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closeDrawer(); closeAbout(); closeConfirm(); }
+  if (e.key === 'Escape') { closeDrawer(); closeAbout(); closeConfirm(); closeProfile(); inviteOverlay.classList.remove('open'); }
 });
 
 // ---------- confirm dialog ----------
@@ -926,30 +1529,27 @@ importFile.addEventListener('change', () => {
     try {
       const data = JSON.parse(reader.result);
       let importedTrips;
-      if (Array.isArray(data.trips)) {
-        importedTrips = data.trips;
-      } else if (Array.isArray(data)) {
-        importedTrips = data;
-      } else if (data && (data.stops || data.sights || data.hotels || data.tripName)) {
-        importedTrips = [data];
-      } else {
-        throw new Error('invalid backup format');
-      }
+      if (Array.isArray(data.trips)) importedTrips = data.trips;
+      else if (Array.isArray(data)) importedTrips = data;
+      else if (data && (data.stops || data.sights || data.hotels || data.tripName)) importedTrips = [data];
+      else throw new Error('invalid backup format');
       closeDrawer();
       askConfirm(
-        'Import überschreibt alle Roadtrips',
-        'Deine bestehenden Roadtrips werden durch die Datei ersetzt. Fortfahren?',
-        () => {
-          trips = importedTrips.map(t => ({
-            id: t.id || uid(),
-            tripName: t.tripName || '',
-            tripDate: t.tripDate || '',
-            stops: Array.isArray(t.stops) ? t.stops : [],
-            sights: Array.isArray(t.sights) ? t.sights : [],
-            hotels: Array.isArray(t.hotels) ? t.hotels : []
-          }));
-          saveTrips();
-          showDashboard();
+        'Roadtrips importieren',
+        importedTrips.length + ' Roadtrip(s) aus der Datei als neue Roadtrips hinzufügen?',
+        async () => {
+          for (const t of importedTrips) {
+            await addDoc(collection(db, 'trips'), {
+              ownerId: currentUser.uid,
+              memberIds: [currentUser.uid],
+              tripName: t.tripName || '',
+              tripDate: t.tripDate || '',
+              stops: Array.isArray(t.stops) ? t.stops : [],
+              sights: Array.isArray(t.sights) ? t.sights : [],
+              hotels: Array.isArray(t.hotels) ? t.hotels : [],
+              createdAt: serverTimestamp()
+            });
+          }
         }
       );
     } catch (e) {
@@ -963,21 +1563,53 @@ importFile.addEventListener('change', () => {
 document.getElementById('clearBtn').addEventListener('click', () => {
   closeDrawer();
   askConfirm(
-    'Alle Roadtrips löschen?',
-    'Sämtliche Roadtrips mit allen Routen, Sehenswürdigkeiten und Hotels werden vollständig entfernt.',
+    'Alle eigenen Roadtrips löschen?',
+    'Alle Roadtrips, deren Besitzer du bist, werden vollständig entfernt. Geteilte Roadtrips anderer verlässt du stattdessen.',
     () => {
       askConfirm(
         'Wirklich ganz sicher?',
-        'Dieser Schritt kann nicht rückgängig gemacht werden. Jetzt endgültig alle Roadtrips löschen?',
-        () => {
-          trips = [];
-          saveTrips();
+        'Dieser Schritt kann nicht rückgängig gemacht werden. Jetzt endgültig fortfahren?',
+        async () => {
+          for (const t of trips) {
+            if (t.ownerId === currentUser.uid) await deleteDoc(tripRef(t.id));
+            else await patchTrip(t.id, { memberIds: arrayRemove(currentUser.uid) });
+          }
           showDashboard();
         }
       );
     }
   );
 });
+
+// ---------- local data migration ----------
+function offerLocalMigration() {
+  if (localStorage.getItem('roadtripMigrationDone')) return;
+  localStorage.setItem('roadtripMigrationDone', '1');
+  let localTrips = [];
+  try {
+    const raw = localStorage.getItem('roadtripAppTrips');
+    if (raw) localTrips = JSON.parse(raw);
+  } catch (e) {}
+  if (!Array.isArray(localTrips) || localTrips.length === 0) return;
+  askConfirm(
+    'Lokale Roadtrips gefunden',
+    localTrips.length + ' Roadtrip(s) von diesem Gerät gefunden. Jetzt mit deinem Konto hochladen, damit sie auch auf anderen Geräten sichtbar sind?',
+    async () => {
+      for (const t of localTrips) {
+        await addDoc(collection(db, 'trips'), {
+          ownerId: currentUser.uid,
+          memberIds: [currentUser.uid],
+          tripName: t.tripName || '',
+          tripDate: t.tripDate || '',
+          stops: Array.isArray(t.stops) ? t.stops : [],
+          sights: Array.isArray(t.sights) ? t.sights : [],
+          hotels: Array.isArray(t.hotels) ? t.hotels : [],
+          createdAt: serverTimestamp()
+        });
+      }
+    }
+  );
+}
 
 // ---------- address map preview ----------
 function wireMapToggle(card) {
@@ -1016,16 +1648,9 @@ function wireMapToggle(card) {
   });
 }
 
-// ---------- generic field update ----------
-function updateField(list, id, field, value) {
-  const item = list.find(i => i.id === id);
-  if (item) item[field] = value;
-  saveTrips();
-}
-
 // ---------- STOPS (Route) ----------
 function renderStops() {
-  const trip = getCurrentTrip();
+  const trip = currentTripDraft;
   if (!trip) return;
   const container = document.getElementById('stopsList');
   container.innerHTML = '';
@@ -1085,29 +1710,33 @@ function renderStops() {
     `;
     card.querySelectorAll('[data-field]').forEach(inp => {
       inp.addEventListener('input', () => {
-        updateField(trip.stops, stop.id, inp.dataset.field, inp.value);
+        stop[inp.dataset.field] = inp.value;
         if (inp.dataset.field === 'km' || inp.dataset.field === 'duration') calcTotals();
         if (inp.dataset.field === 'address') {
           card.querySelector('.btn-waze').setAttribute('href', wazeUrl(inp.value));
         }
+        debouncedPatch('stops', currentTripId, { stops: trip.stops });
       });
     });
     card.querySelector('[data-action="up"]').addEventListener('click', () => {
       if (idx > 0) {
         [trip.stops[idx - 1], trip.stops[idx]] = [trip.stops[idx], trip.stops[idx - 1]];
-        saveTrips(); renderStops(); calcTotals();
+        patchTrip(currentTripId, { stops: trip.stops });
+        withFocusPreserved(container, renderStops); calcTotals();
       }
     });
     card.querySelector('[data-action="down"]').addEventListener('click', () => {
       if (idx < trip.stops.length - 1) {
         [trip.stops[idx + 1], trip.stops[idx]] = [trip.stops[idx], trip.stops[idx + 1]];
-        saveTrips(); renderStops(); calcTotals();
+        patchTrip(currentTripId, { stops: trip.stops });
+        withFocusPreserved(container, renderStops); calcTotals();
       }
     });
     card.querySelector('[data-action="delete"]').addEventListener('click', () => {
       askConfirm('Etappe löschen?', 'Diese Etappe wird unwiderruflich entfernt.', () => {
         trip.stops = trip.stops.filter(s => s.id !== stop.id);
-        saveTrips(); renderStops(); calcTotals();
+        patchTrip(currentTripId, { stops: trip.stops });
+        renderStops(); calcTotals();
       });
     });
     wireMapToggle(card);
@@ -1116,15 +1745,16 @@ function renderStops() {
 }
 
 document.getElementById('addStop').addEventListener('click', () => {
-  const trip = getCurrentTrip();
+  const trip = currentTripDraft;
   if (!trip) return;
   trip.stops.push({ id: uid(), address: '', time: '', km: '', duration: '', note: '' });
-  saveTrips(); renderStops(); calcTotals();
+  patchTrip(currentTripId, { stops: trip.stops });
+  renderStops(); calcTotals();
 });
 
 // ---------- SIGHTS ----------
 function renderSights() {
-  const trip = getCurrentTrip();
+  const trip = currentTripDraft;
   if (!trip) return;
   const container = document.getElementById('sightsList');
   container.innerHTML = '';
@@ -1170,16 +1800,18 @@ function renderSights() {
     `;
     card.querySelectorAll('[data-field]').forEach(inp => {
       inp.addEventListener('input', () => {
-        updateField(trip.sights, sight.id, inp.dataset.field, inp.value);
+        sight[inp.dataset.field] = inp.value;
         if (inp.dataset.field === 'address') {
           card.querySelector('.btn-waze').setAttribute('href', wazeUrl(inp.value));
         }
+        debouncedPatch('sights', currentTripId, { sights: trip.sights });
       });
     });
     card.querySelector('[data-action="delete"]').addEventListener('click', () => {
       askConfirm('Sehenswürdigkeit löschen?', 'Dieser Eintrag wird unwiderruflich entfernt.', () => {
         trip.sights = trip.sights.filter(s => s.id !== sight.id);
-        saveTrips(); renderSights();
+        patchTrip(currentTripId, { sights: trip.sights });
+        renderSights();
       });
     });
     wireMapToggle(card);
@@ -1188,15 +1820,16 @@ function renderSights() {
 }
 
 document.getElementById('addSight').addEventListener('click', () => {
-  const trip = getCurrentTrip();
+  const trip = currentTripDraft;
   if (!trip) return;
   trip.sights.push({ id: uid(), name: '', address: '', note: '' });
-  saveTrips(); renderSights();
+  patchTrip(currentTripId, { sights: trip.sights });
+  renderSights();
 });
 
 // ---------- HOTELS ----------
 function renderHotels() {
-  const trip = getCurrentTrip();
+  const trip = currentTripDraft;
   if (!trip) return;
   const container = document.getElementById('hotelsList');
   container.innerHTML = '';
@@ -1262,16 +1895,18 @@ function renderHotels() {
     `;
     card.querySelectorAll('[data-field]').forEach(inp => {
       inp.addEventListener('input', () => {
-        updateField(trip.hotels, hotel.id, inp.dataset.field, inp.value);
+        hotel[inp.dataset.field] = inp.value;
         if (inp.dataset.field === 'address') {
           card.querySelector('.btn-waze').setAttribute('href', wazeUrl(inp.value));
         }
+        debouncedPatch('hotels', currentTripId, { hotels: trip.hotels });
       });
     });
     card.querySelector('[data-action="delete"]').addEventListener('click', () => {
       askConfirm('Hotel löschen?', 'Dieser Eintrag wird unwiderruflich entfernt.', () => {
         trip.hotels = trip.hotels.filter(h => h.id !== hotel.id);
-        saveTrips(); renderHotels();
+        patchTrip(currentTripId, { hotels: trip.hotels });
+        renderHotels();
       });
     });
     wireMapToggle(card);
@@ -1280,10 +1915,11 @@ function renderHotels() {
 }
 
 document.getElementById('addHotel').addEventListener('click', () => {
-  const trip = getCurrentTrip();
+  const trip = currentTripDraft;
   if (!trip) return;
   trip.hotels.push({ id: uid(), name: '', address: '', checkin: '', checkout: '', price: '', bookingNumber: '', note: '' });
-  saveTrips(); renderHotels();
+  patchTrip(currentTripId, { hotels: trip.hotels });
+  renderHotels();
 });
 
 // ---------- utils ----------
@@ -1295,9 +1931,6 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
-
-// ---------- init ----------
-showDashboard();
 
 // ---------- service worker ----------
 if ('serviceWorker' in navigator) {
